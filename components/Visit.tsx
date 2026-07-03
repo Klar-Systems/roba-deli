@@ -22,7 +22,10 @@ export default function Visit() {
           <div className="inforow">
             <div className="k">Hours</div>
             <div className="v">
-              Open daily from 10:30<br />Lunch to late night
+              Mon–Thu 10:30–23:00<br />
+              Fri 11:00–04:30<br />
+              Sat 11:30–04:30<br />
+              Sun 11:30–23:00
               <br />
               <small style={{ color: "var(--muted)" }}>Lunch deal 10:30–15:00</small>
             </div>

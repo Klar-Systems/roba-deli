@@ -32,7 +32,7 @@ const ITEMS = [
   },
   {
     title: "Lunch to late",
-    body: "Open from 10:30 — your spot from lunch to late night.",
+    body: "Your spot from lunch to late night — weekends till 04:30.",
     icon: (
       <svg className="ico" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="2.2">
         <circle cx="24" cy="24" r="18" />

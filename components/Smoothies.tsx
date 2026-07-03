@@ -16,7 +16,7 @@ export default function Smoothies() {
             <div className="smoothie" key={s.name}>
               <div className="shot-wrap">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="shot" src={s.img} alt={`${s.name} smoothie`} />
+                <img className="shot" src={s.img} alt={`${s.name} smoothie`} loading="lazy" decoding="async" />
               </div>
               <h3>{s.name}</h3>
               <div className="ing">{s.ing}</div>

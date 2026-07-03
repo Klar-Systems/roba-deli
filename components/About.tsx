@@ -4,7 +4,7 @@ export default function About() {
       <div className="wrap grid">
         <div className="media reveal">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/about-sub.png" alt="Roba Deli handcrafted sub wrapped in deli paper" />
+          <img src="/images/about-sub.webp" alt="Roba Deli handcrafted sub wrapped in deli paper" loading="lazy" decoding="async" />
           <span className="tag">Made to order on Iso Roobertinkatu</span>
         </div>
         <div className="reveal">

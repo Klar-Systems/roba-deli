@@ -125,6 +125,7 @@ section{position:relative;padding:108px 0;z-index:1}
 .tabs button:hover{border-color:var(--gold);color:#fff}
 .tabs button.on{background:var(--gold);border-color:var(--gold);color:var(--ink)}
 .items{display:grid;grid-template-columns:1fr 1fr;gap:4px 64px;max-width:1000px;margin:0 auto}
+.items[hidden]{display:none}
 .item{display:flex;gap:18px;align-items:baseline;padding:20px 0;border-bottom:1px solid var(--line-soft)}
 .item .main{flex:1}
 .item h3{font-family:var(--font-montserrat);font-weight:600;font-size:17px;letter-spacing:.02em;color:#fff;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
@@ -143,18 +144,13 @@ section{position:relative;padding:108px 0;z-index:1}
 .craft h3{font-family:var(--font-montserrat);font-weight:600;font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:#fff;margin-bottom:8px}
 .craft p{color:var(--muted);font-size:13.5px}
 
-/* smoothies (alive / twirl) — real images */
+/* smoothies — real images (static) */
 .smoothies{background:var(--ink-2);overflow:hidden}
-.smoo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:26px;perspective:1100px}
+.smoo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;max-width:960px;margin:0 auto}
 .smoothie{text-align:center;padding:10px}
 .shot-wrap{height:300px;display:flex;align-items:flex-end;justify-content:center;margin-bottom:20px}
-.shot{height:300px;width:auto;object-fit:contain;transform-style:preserve-3d;transition:transform 1s var(--ease);
+.shot{height:300px;width:auto;object-fit:contain;
   filter:drop-shadow(0 28px 30px rgba(0,0,0,.6))}
-.smoothie.in .shot{animation:twirlIn 1.25s var(--ease) both}
-.smoothie.in .shot-wrap{animation:floaty 6s ease-in-out infinite}
-.smoothie:hover .shot{transform:rotateY(360deg)}
-@keyframes twirlIn{from{opacity:0;transform:rotateY(-220deg) scale(.82)}to{opacity:1;transform:rotateY(0) scale(1)}}
-@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
 .smoothie h3{font-family:var(--font-montserrat);font-weight:600;font-size:15px;letter-spacing:.05em;text-transform:uppercase;color:#fff}
 .smoothie .ing{color:var(--muted);font-size:12.5px;margin:8px 0 12px;min-height:54px}
 .smoothie .pr{font-family:var(--font-montserrat);font-weight:700;color:var(--gold);font-size:16px}

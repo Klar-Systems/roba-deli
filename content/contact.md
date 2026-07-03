@@ -2,8 +2,8 @@
 
 - **Address:** Iso Roobertinkatu 1, 00120 Helsinki (plus code 5W7V+MH)
 - **Phone:** 050 379 7490 · `tel:+358503797490`
-- **Hours:** opens **10:30** daily · Lunch Deal 10:30–15:00 · open "lunch to late night"
-  · ⚠ exact daily closing time still to confirm (shown as "from 10:30 · lunch to late")
+- **Hours (confirmed 2026-07-03):** Mon–Thu 10:30–23:00 · Fri 11:00–04:30 · Sat 11:30–04:30
+  · Sun 11:30–23:00 · Lunch Deal 10:30–15:00
 - **Service:** Dine-in · Takeaway · Delivery
 - **Rating:** ⭐ 5.0 (24 reviews) · €10–15 / person
 - **Website:** none yet (this mockup is the pitch)

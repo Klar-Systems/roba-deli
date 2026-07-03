@@ -4,8 +4,9 @@ export default function Hero() {
       <div className="hero-bg">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/images/hero-scrape-real.png"
+          src="/images/hero-scrape-real.webp"
           alt="Raclette cheese scraped molten over a Roba Deli pastrami sandwich"
+          fetchPriority="high"
         />
       </div>
       <div className="hero-veil"></div>
