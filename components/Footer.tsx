@@ -3,7 +3,7 @@ export default function Footer() {
     <footer className="f">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className="logo-full" src="/images/logo.png" alt="Roba Deli" />
-      <div className="tg">Handcrafted sandwiches, salads &amp; provisions</div>
+      <div className="tg">Handcrafted sandwiches, wraps &amp; provisions</div>
       <div className="fl">
         <a href="#about">About</a>
         <a href="#menu">Menu</a>

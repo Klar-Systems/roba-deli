@@ -1,12 +1,13 @@
-// Roba Deli content — single source of truth (from the menu photos + Google listing).
+// Roba Deli content — single source of truth (from the in-store menu screens).
 
 export type MenuItem = {
   name: string;
   desc?: string;
   diet?: "L" | "G" | "LG"; // lactose-free / gluten-free / both
-  badge?: string; // highlight (e.g. "Signature"), not a dietary flag
-  price: string; // single price, or the 6" price for subs
-  price12?: string; // 12" price for subs (value only; label added in the UI)
+  badge?: string; // small highlight flag (e.g. "Vegan")
+  fav?: boolean; // gold "★ Favorite" pill
+  price: string; // single price, or the small (S) price for subs
+  price12?: string; // large (L) price for subs (value only; label added in the UI)
 };
 export type MenuCategory = { name: string; items: MenuItem[] };
 
@@ -14,27 +15,17 @@ export const MENU: MenuCategory[] = [
   {
     name: "Sandwiches",
     items: [
-      { name: "Brisket Raclette Melt", desc: "Slow-cooked brisket, craft brioche, pickles, mustard aioli & barbecue, molten raclette swiss.", badge: "Signature", price: "19,90 €" },
-      { name: "Philly Steak Sub", desc: "Beef, sautéed peppers, onion & mushroom, provolone & cheddar, mustard aioli.", diet: "L", price: "7,90 €", price12: "15,90 €" },
-      { name: "Ultimate Italian", desc: "Sourdough focaccia, salami, smoked turkey, provolone, aioli.", price: "7,90 €", price12: "15,90 €" },
-      { name: "Grilled Chicken Sub", desc: "Grilled corn-fed chicken, fresh veggies, pickles, cheese, white sauce.", price: "7,90 €", price12: "15,90 €" },
-      { name: "Gravlax Sub", desc: "Sourdough focaccia, salmon gravlax, lemon-dill smetana, mango curry, pickled onion, rucola & capers.", diet: "L", price: "7,90 €", price12: "15,90 €" },
-      { name: "Halumi Sub", desc: "Marinated grilled halloumi, provolone, fresh veggies, muhamara & mango curry.", diet: "L", price: "7,50 €", price12: "13,90 €" },
+      { name: "Pastrami Burger", desc: "Beef pastrami in craft brioche, dijon aioli, BBQ sauce, raclette melt cheese and pickles.", diet: "L", fav: true, price: "17,90 €" },
+      { name: "Philly Cheesesteak", desc: "Beef steak, melted provolone cheese, sautéed onion & paprika, cheddar sauce.", diet: "L", price: "7,90 €", price12: "14,90 €" },
+      { name: "Ultimate Italian", desc: "Sourdough focaccia, provolone, smoked turkey, beef salami, bufala mozzarella & fresh pesto.", diet: "L", price: "7,90 €", price12: "14,90 €" },
+      { name: "Grilled Halloumi", desc: "Grilled halloumi, provolone, fresh pesto, pickles & sun-dried tomatoes.", diet: "L", price: "7,90 €", price12: "14,90 €" },
     ],
   },
   {
     name: "Wraps",
     items: [
-      { name: "Falafel Wrap", desc: "Tortilla, cheese, falafel, fresh veggies, pickles, muhamara & tzatziki.", diet: "L", price: "9,90 €" },
-      { name: "Chicken Shawarma Wrap", desc: "Tortilla, chicken, fresh veggies, white & cheddar sauce.", diet: "L", price: "9,90 €" },
-    ],
-  },
-  {
-    name: "Salads",
-    items: [
-      { name: "Grilled Chicken Caesar", desc: "Gem lettuce, chicken, parmesan, Caesar dressing, croutons.", diet: "LG", price: "13,90 €" },
-      { name: "Gravlax & Dill Potato", desc: "Dill potato, salmon gravlax, lemon smetana, mango curry mayo, capers, spring onions.", diet: "LG", price: "13,90 €" },
-      { name: "Falafel Salad", desc: "Falafel, mixed greens, melon, feta, muhamara sauce.", diet: "LG", price: "11,90 €" },
+      { name: "Chicken Shwarma", desc: "Lawash nan, garlic sauce, pomegranate molasses, pickles, sumac & grilled chicken shawarma.", diet: "L", price: "9,90 €" },
+      { name: "Falafel Pita", desc: "Falafel, pita, tahini & amba sauce, roasted eggplant, harissa paste, pickles & fresh greens.", diet: "L", badge: "Vegan", price: "9,90 €" },
     ],
   },
   {
@@ -48,11 +39,8 @@ export const MENU: MenuCategory[] = [
   {
     name: "Snacks",
     items: [
-      { name: "Falafel & Muhamara Dip", diet: "LG", price: "4,90 €" },
-      { name: "Halumi & Hot Honey Dip", diet: "LG", price: "5,90 €" },
-      { name: "Nachos", diet: "LG", price: "4,50 €" },
-      { name: "Crisps", diet: "LG", price: "4,50 €" },
-      { name: "Loaded Nachos — Beef / Chicken", desc: "Salsa, jalapeños, cheese, habanero sauce, beef or chicken.", price: "9,50 €" },
+      { name: "Hot Honey Halloumi", diet: "LG", price: "5,90 €" },
+      { name: "Loaded Nachos (Beef / Chicken)", desc: "Salsa, melty cheddar cheese and chicken or beef.", diet: "L", price: "7,50 €" },
     ],
   },
   {
@@ -63,9 +51,8 @@ export const MENU: MenuCategory[] = [
       { name: "Still Water", price: "3,50 €" },
       { name: "Juice", price: "3,50 €" },
       { name: "Espresso", price: "3,00 €" },
-      { name: "Americano", price: "3,50 €" },
+      { name: "Americano", price: "3,00 €" },
       { name: "Cappuccino", price: "3,50 €" },
-      { name: "Latte", price: "3,50 €" },
       { name: "Tea", price: "3,00 €" },
     ],
   },
@@ -80,9 +67,9 @@ export const SMOOTHIES: Smoothie[] = [
 
 export type Deal = { k: string; price: string; d: string; note?: string };
 export const DEALS: Deal[] = [
-  { k: "Lunch deal", price: "€6.99", d: '6" sub or salad · 10:30–15:00' },
-  { k: "Combo deal", price: "€8.99", d: '6" sub + a soft drink' },
-  { k: "Duo deal", price: "€23.99", d: 'Two 12" subs', note: "Excl. Brisket Raclette Melt" },
+  { k: "Lunch deal", price: "€6.99", d: "S sub · 10:30–15:00" },
+  { k: "Combo deal", price: "€8.99", d: "S sub + a soft drink" },
+  { k: "Duo deal", price: "€23.99", d: "Two L subs", note: "Excl. Pastrami Burger" },
 ];
 
 export type Review = { text: string; who: string };

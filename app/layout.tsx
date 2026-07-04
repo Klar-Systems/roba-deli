@@ -21,11 +21,11 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default:
-      "Roba Deli | Handcrafted sandwiches, salads & smoothies · Iso Roobertinkatu 1, Helsinki",
+      "Roba Deli | Handcrafted sandwiches, wraps & smoothies · Iso Roobertinkatu 1, Helsinki",
     template: "%s · Roba Deli",
   },
   description:
-    "Roba Deli — Helsinki's newest sandwich deli on Iso Roobertinkatu. Handcrafted New York-style sandwiches, salads, smoothies & provisions. Hot, fresh, cheesy — from lunch to late night. ⭐ 5.0 on Google.",
+    "Roba Deli, Helsinki's newest sandwich deli on Iso Roobertinkatu. Handcrafted New York-style sandwiches, wraps, smoothies & provisions. Hot, fresh, cheesy, from lunch to late night. ⭐ 5.0 on Google.",
   applicationName: "Roba Deli",
   keywords: [
     "Roba Deli",
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     "Punavuori",
     "subs Helsinki",
     "smoothies Helsinki",
-    "salads",
+    "wraps Helsinki",
     "takeaway Helsinki",
   ],
   alternates: { canonical: "/" },
@@ -47,13 +47,13 @@ export const metadata: Metadata = {
     locale: "en_US",
     title: "Roba Deli · Helsinki's newest sandwich deli",
     description:
-      "Handcrafted sandwiches, salads & smoothies — from lunch to late night. Iso Roobertinkatu 1, Helsinki.",
+      "Handcrafted sandwiches, wraps & smoothies, from lunch to late night. Iso Roobertinkatu 1, Helsinki.",
     images: [
       {
         url: "/og.png",
         width: 1200,
         height: 630,
-        alt: "Roba Deli — Iso Roobertinkatu 1, Helsinki",
+        alt: "Roba Deli · Iso Roobertinkatu 1, Helsinki",
       },
     ],
   },
@@ -61,7 +61,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Roba Deli · Helsinki's newest sandwich deli",
     description:
-      "Handcrafted sandwiches, salads & smoothies — from lunch to late night. Iso Roobertinkatu 1, Helsinki.",
+      "Handcrafted sandwiches, wraps & smoothies, from lunch to late night. Iso Roobertinkatu 1, Helsinki.",
     images: ["/og.png"],
   },
   robots: {

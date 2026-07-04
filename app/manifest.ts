@@ -2,10 +2,10 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Roba Deli — Sandwich Deli, Helsinki",
+    name: "Roba Deli · Sandwich Deli, Helsinki",
     short_name: "Roba Deli",
     description:
-      "Handcrafted New York-style sandwiches, salads & smoothies on Iso Roobertinkatu 1, Helsinki.",
+      "Handcrafted New York-style sandwiches, wraps & smoothies on Iso Roobertinkatu 1, Helsinki.",
     start_url: "/",
     display: "standalone",
     background_color: "#0E0C09",

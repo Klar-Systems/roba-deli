@@ -23,8 +23,8 @@ const hasMenu = {
       suitableForDiet: it.diet ? DIET[it.diet] : undefined,
       offers: it.price12
         ? [
-            { "@type": "Offer", name: '6"', price: eur(it.price), priceCurrency: "EUR" },
-            { "@type": "Offer", name: '12"', price: eur(it.price12), priceCurrency: "EUR" },
+            { "@type": "Offer", name: "Small", price: eur(it.price), priceCurrency: "EUR" },
+            { "@type": "Offer", name: "Large", price: eur(it.price12), priceCurrency: "EUR" },
           ]
         : { "@type": "Offer", price: eur(it.price), priceCurrency: "EUR" },
     })),
@@ -42,11 +42,11 @@ export const restaurantJsonLd = {
   "@id": `${SITE_URL}/#restaurant`,
   name: "Roba Deli",
   description:
-    "Helsinki's New York-style sandwich deli on Iso Roobertinkatu — handcrafted sandwiches, salads & smoothies, from lunch to late night.",
+    "Helsinki's New York-style sandwich deli on Iso Roobertinkatu, handcrafted sandwiches, wraps & smoothies, from lunch to late night.",
   url: SITE_URL,
   telephone: "+358503797490",
   priceRange: "€10–15",
-  servesCuisine: ["Sandwiches", "New York deli", "Salads", "Smoothies"],
+  servesCuisine: ["Sandwiches", "New York deli", "Wraps", "Smoothies"],
   image: [`${SITE_URL}/og.png`, `${SITE_URL}/images/logo.png`],
   logo: `${SITE_URL}/images/logo.png`,
   address: {

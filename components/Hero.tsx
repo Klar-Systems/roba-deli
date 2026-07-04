@@ -13,10 +13,10 @@ export default function Hero() {
       <div className="hero-content">
         <span className="eyebrow">Iso Roobertinkatu · Helsinki</span>
         <h1>
-          Handcrafted<br />sandwiches<em>salads &amp; provisions</em>
+          Handcrafted<br />sandwiches<em>wraps &amp; provisions</em>
         </h1>
         <p>
-          Helsinki&apos;s newest deli on Iso Roobertinkatu. Hot, fresh, cheesy — made to order, from lunch to late
+          Helsinki&apos;s newest deli on Iso Roobertinkatu. Hot, fresh, cheesy, made to order, from lunch to late
           night.
         </p>
         <div className="hero-cta">

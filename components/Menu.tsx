@@ -32,14 +32,15 @@ export default function Menu() {
                   <div className="main">
                     <h3>
                       {it.name}{" "}
+                      {it.fav ? <span className="fav">★ Favorite</span> : null}
                       {it.diet ? <span className="flag">{it.diet}</span> : null}
                       {it.badge ? <span className="flag">{it.badge}</span> : null}
                     </h3>
                     {it.desc ? <p>{it.desc}</p> : null}
                   </div>
                   <div className="price">
-                    {it.price}
-                    {it.price12 ? <small>12&quot; {it.price12}</small> : null}
+                    {it.price12 ? `S ${it.price}` : it.price}
+                    {it.price12 ? <small>L {it.price12}</small> : null}
                   </div>
                 </div>
               ))}
@@ -49,7 +50,7 @@ export default function Menu() {
 
         <p className="legend">
           <b>L</b> Lactose-free &nbsp;·&nbsp; <b>G</b> Gluten-free &nbsp;·&nbsp; <b>LG</b> both &nbsp;·&nbsp; Subs
-          available 6&quot; / 12&quot;
+          available in <b>S</b> / <b>L</b>
         </p>
       </div>
     </section>
