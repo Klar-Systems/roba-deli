@@ -74,7 +74,7 @@ export const DEALS: Deal[] = [
 
 export type Review = { text: string; who: string };
 export const REVIEWS: Review[] = [
-  { text: "Amazing good subs! I'm definitely coming back. 100% better than Subway.", who: "Oliver Österberg" },
+  { text: "Amazing good subs! I'm definitely coming back.", who: "Oliver Österberg" },
   { text: "Super good sandwiches. You have to try the Philly!", who: "Elias Mella" },
   { text: "Delicious, will be back to try more!", who: "Cameron Weaver" },
 ];

@@ -5,9 +5,8 @@ export default function Reviews() {
     <section className="reviews" id="reviews">
       <div className="wrap">
         <div className="stars-top reveal">
-          <div className="big">5.0</div>
-          <div className="st">★★★★★</div>
-          <div className="sub">24 reviews on Google</div>
+          <span className="eyebrow">Kind words</span>
+          <h2>What guests <em>say</em></h2>
         </div>
         <div className="rev-grid">
           {REVIEWS.map((r) => (

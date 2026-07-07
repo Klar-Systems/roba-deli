@@ -30,12 +30,6 @@ export default function Visit() {
               <small style={{ color: "var(--muted)" }}>Lunch deal 10:30–15:00</small>
             </div>
           </div>
-          <div className="inforow">
-            <div className="k">Rating</div>
-            <div className="v">
-              <span className="gold">★★★★★</span> 5.0 · 24 reviews
-            </div>
-          </div>
           <div className="tags">
             <span className="tag-pill">Dine-in</span>
             <span className="tag-pill">Takeaway</span>
@@ -67,7 +61,7 @@ export default function Visit() {
             title="Roba Deli location"
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
-            src="https://www.google.com/maps?q=Iso%20Roobertinkatu%201,%2000120%20Helsinki&z=16&output=embed"
+            src="https://www.google.com/maps?q=Roba%20Deli,%20Iso%20Roobertinkatu%201,%2000120%20Helsinki&z=16&output=embed"
           ></iframe>
         </div>
       </div>

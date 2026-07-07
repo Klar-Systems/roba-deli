@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     template: "%s · Roba Deli",
   },
   description:
-    "Roba Deli, Helsinki's newest sandwich deli on Iso Roobertinkatu. Handcrafted New York-style sandwiches, wraps, smoothies & provisions. Hot, fresh, cheesy, from lunch to late night. ⭐ 5.0 on Google.",
+    "Roba Deli, Helsinki's newest sandwich deli on Iso Roobertinkatu. Handcrafted New York-style sandwiches, wraps, smoothies & provisions. Hot, fresh, cheesy, from lunch to late night.",
   applicationName: "Roba Deli",
   keywords: [
     "Roba Deli",

@@ -21,7 +21,6 @@ export default function About() {
             <li>Raclette &amp; cheese melted over the sandwich, to order.</li>
             <li>Fresh-baked rolls: craft brioche &amp; sourdough focaccia.</li>
             <li>Real-fruit smoothies &amp; a fresh-ingredient bar.</li>
-            <li>⭐ 5.0 on Google: a guest literally wrote “100% better than Subway.”</li>
           </ul>
           <a className="btn" href="#menu">Explore the menu</a>
         </div>

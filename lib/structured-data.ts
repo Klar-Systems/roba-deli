@@ -105,12 +105,6 @@ export const restaurantJsonLd = {
     "https://www.facebook.com/Robadeli26/",
     "https://www.tiktok.com/@robadeli",
   ],
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: "5.0",
-    reviewCount: "24",
-    bestRating: "5",
-  },
   review: REVIEWS.map((r) => ({
     "@type": "Review",
     author: { "@type": "Person", name: r.who },
