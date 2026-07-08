@@ -217,10 +217,13 @@ nav.main .langswitch i{color:var(--line);font-style:normal}
 
 /* responsive */
 @media(max-width:920px){
-  nav.main{position:fixed;inset:0 0 0 auto;width:80%;max-width:330px;background:var(--ink-2);flex-direction:column;
-    align-items:flex-start;justify-content:center;padding:60px 38px;gap:26px;transform:translateX(100%);transition:.4s var(--ease);box-shadow:var(--shadow);border-left:1px solid var(--line)}
+  nav.main{position:fixed;top:0;right:0;bottom:0;left:auto;height:100dvh;width:80%;max-width:330px;background:var(--ink-2);flex-direction:column;
+    align-items:flex-start;justify-content:flex-start;padding:96px 38px 44px;gap:22px;overflow-y:auto;transform:translateX(100%);transition:.4s var(--ease);box-shadow:var(--shadow);border-left:1px solid var(--line)}
   nav.main.open{transform:none}
   nav.main a{font-size:16px}
+  nav.main .langswitch{width:100%;gap:16px;font-size:16px;margin-top:6px;padding-top:22px;border-top:1px solid var(--line-soft)}
+  nav.main .langswitch a{font-size:16px;padding:2px 0}
+  nav.main .langswitch i{font-size:16px}
   .burger{display:flex}
   .about .grid,.visit .grid{grid-template-columns:1fr;gap:34px}
   .about .media img{height:380px}
