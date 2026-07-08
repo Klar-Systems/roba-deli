@@ -1,39 +1,43 @@
-export default function Visit() {
+import { dict, type Locale } from "@/lib/i18n";
+
+export default function Visit({ locale }: { locale: Locale }) {
+  const t = dict[locale].visit;
   return (
     <section className="visit" id="visit">
       <div className="wrap grid">
         <div className="reveal">
-          <span className="eyebrow">Find us</span>
+          <span className="eyebrow">{t.eyebrow}</span>
           <h2>
-            Visit <em>Roba Deli</em>
+            {t.titlePre}<em>{t.titleEm}</em>
           </h2>
           <div className="inforow">
-            <div className="k">Address</div>
+            <div className="k">{t.labelAddress}</div>
             <div className="v">
               Iso Roobertinkatu 1<br />00120 Helsinki
             </div>
           </div>
           <div className="inforow">
-            <div className="k">Phone</div>
+            <div className="k">{t.labelPhone}</div>
             <div className="v">
               <a href="tel:+358503797490">050 379 7490</a>
             </div>
           </div>
           <div className="inforow">
-            <div className="k">Hours</div>
+            <div className="k">{t.labelHours}</div>
             <div className="v">
-              Mon–Thu 10:30–23:00<br />
-              Fri 11:00–04:30<br />
-              Sat 11:30–04:30<br />
-              Sun 11:30–23:00
-              <br />
-              <small style={{ color: "var(--muted)" }}>Lunch deal 10:30–15:00</small>
+              {t.hours.map((line) => (
+                <span key={line}>
+                  {line}
+                  <br />
+                </span>
+              ))}
+              <small style={{ color: "var(--muted)" }}>{t.lunchDeal}</small>
             </div>
           </div>
           <div className="tags">
-            <span className="tag-pill">Dine-in</span>
-            <span className="tag-pill">Takeaway</span>
-            <span className="tag-pill">Delivery</span>
+            {t.pills.map((p) => (
+              <span className="tag-pill" key={p}>{p}</span>
+            ))}
           </div>
           <div className="socials">
             <a href="https://www.instagram.com/roba.deli/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
@@ -53,7 +57,7 @@ export default function Visit() {
             </a>
           </div>
           <div style={{ marginTop: 26 }}>
-            <a className="btn btn-solid" href="tel:+358503797490">Call to order · 050 379 7490</a>
+            <a className="btn btn-solid" href="tel:+358503797490">{t.cta}</a>
           </div>
         </div>
         <div className="map-card reveal">

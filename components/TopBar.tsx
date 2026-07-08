@@ -1,12 +1,15 @@
-export default function TopBar() {
+import { dict, type Locale } from "@/lib/i18n";
+
+export default function TopBar({ locale }: { locale: Locale }) {
+  const t = dict[locale].topbar;
   return (
     <div className="topbar">
       <div className="wrap">
-        <span>Iso Roobertinkatu 1, Helsinki</span>
+        <span>{t.addr}</span>
         <span className="hide-s">
-          Open daily · <b>Fri &amp; Sat till 4:30</b>
+          {t.openPre} <b>{t.openBold}</b>
         </span>
-        <a href="tel:+358503797490">Call · 050 379 7490</a>
+        <a href="tel:+358503797490">{t.call}</a>
       </div>
     </div>
   );

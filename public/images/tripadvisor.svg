@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 236 44" role="img" aria-label="Tripadvisor">
+  <g>
+    <circle cx="24" cy="22" r="16.5" fill="none" stroke="#34E0A1" stroke-width="4.5"/>
+    <circle cx="20.5" cy="22" r="5" fill="#EBE3D2"/>
+    <circle cx="56" cy="22" r="16.5" fill="none" stroke="#34E0A1" stroke-width="4.5"/>
+    <circle cx="59.5" cy="22" r="5" fill="#EBE3D2"/>
+    <path d="M40 33 L33 41 L47 41 Z" fill="#34E0A1"/>
+  </g>
+  <text x="86" y="31" font-family="'Trebuchet MS', 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="25" letter-spacing="-0.3" fill="#EBE3D2">Tripadvisor</text>
+</svg>

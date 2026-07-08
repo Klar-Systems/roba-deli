@@ -202,8 +202,18 @@ footer.f .logo-full{height:140px;width:auto;margin:0 auto 10px;display:block}
 footer.f .tg{color:var(--muted);font-size:12px;letter-spacing:.2em;text-transform:uppercase;margin:10px 0 22px;font-family:var(--font-montserrat)}
 footer.f .fl{display:flex;gap:26px;justify-content:center;flex-wrap:wrap;margin-bottom:22px;font-family:var(--font-montserrat);font-size:12px;letter-spacing:.1em;text-transform:uppercase}
 footer.f .fl a{color:var(--cream)}footer.f .fl a:hover{color:var(--gold)}
+footer.f .trust{display:flex;align-items:center;justify-content:center;gap:26px;flex-wrap:wrap;margin:0 0 26px}
+footer.f .trust img{height:24px;width:auto;opacity:.82;transition:opacity .3s var(--ease)}
+footer.f .trust a{display:inline-flex}
+footer.f .trust a:hover img{opacity:1}
 footer.f .cc{color:var(--gold-deep);font-size:11.5px;letter-spacing:.06em}
 footer.f .cc a{color:var(--muted)}
+nav.main .langswitch{display:inline-flex;align-items:center;gap:8px;font-family:var(--font-montserrat);font-weight:600;font-size:12px;letter-spacing:.12em}
+nav.main .langswitch a{padding:0;color:var(--muted)}
+nav.main .langswitch a::after{display:none}
+nav.main .langswitch a:hover{color:var(--cream)}
+nav.main .langswitch a.on{color:var(--gold)}
+nav.main .langswitch i{color:var(--line);font-style:normal}
 
 /* responsive */
 @media(max-width:920px){
