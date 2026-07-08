@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     "salads",
     "takeaway Helsinki",
   ],
-  alternates: { canonical: "/" },
+  alternates: { canonical: "/", languages: { en: "/", fi: "/fi" } },
   manifest: "/manifest.webmanifest",
   openGraph: {
     type: "website",

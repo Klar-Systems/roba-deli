@@ -1,13 +1,16 @@
 import { SMOOTHIES } from "@/lib/data";
+import { dict, type Locale } from "@/lib/i18n";
 
-export default function Smoothies() {
+export default function Smoothies({ locale }: { locale: Locale }) {
+  const t = dict[locale].smoothies;
+  const fi = locale === "fi";
   return (
     <section className="smoothies" id="smoothies">
       <div className="wrap">
         <div className="sec-head reveal">
-          <span className="eyebrow">Real fruit</span>
+          <span className="eyebrow">{t.eyebrow}</span>
           <h2>
-            Smoothies, <em>shaken to life</em>
+            {t.titlePre}<em>{t.titleEm}</em>
           </h2>
           <div className="rule"></div>
         </div>
@@ -19,7 +22,7 @@ export default function Smoothies() {
                 <img className="shot" src={s.img} alt={`${s.name} smoothie`} loading="lazy" decoding="async" />
               </div>
               <h3>{s.name}</h3>
-              <div className="ing">{s.ing}</div>
+              <div className="ing">{fi ? s.ingFi : s.ing}</div>
               <div className="pr">{s.price}</div>
             </div>
           ))}

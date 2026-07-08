@@ -1,17 +1,20 @@
 "use client";
 import { useState } from "react";
 import { MENU } from "@/lib/data";
+import { dict, type Locale } from "@/lib/i18n";
 
-export default function Menu() {
+export default function Menu({ locale }: { locale: Locale }) {
+  const t = dict[locale].menu;
+  const fi = locale === "fi";
   const [active, setActive] = useState(0);
 
   return (
     <section className="menu" id="menu">
       <div className="wrap">
         <div className="sec-head reveal">
-          <span className="eyebrow">The menu</span>
+          <span className="eyebrow">{t.eyebrow}</span>
           <h2>
-            Handcrafted, <em>made to order</em>
+            {t.titlePre}<em>{t.titleEm}</em>
           </h2>
           <div className="rule"></div>
         </div>
@@ -19,7 +22,7 @@ export default function Menu() {
         <div className="tabs reveal">
           {MENU.map((c, i) => (
             <button key={c.name} className={i === active ? "on" : ""} onClick={() => setActive(i)}>
-              {c.name}
+              {fi ? c.nameFi : c.name}
             </button>
           ))}
         </div>
@@ -27,29 +30,32 @@ export default function Menu() {
         <div className="reveal">
           {MENU.map((c, i) => (
             <div className="items" key={c.name} hidden={i !== active}>
-              {c.items.map((it) => (
-                <div className="item" key={it.name}>
-                  <div className="main">
-                    <h3>
-                      {it.name}{" "}
-                      {it.diet ? <span className="flag">{it.diet}</span> : null}
-                      {it.badge ? <span className="flag">{it.badge}</span> : null}
-                    </h3>
-                    {it.desc ? <p>{it.desc}</p> : null}
+              {c.items.map((it) => {
+                const desc = fi ? it.descFi ?? it.desc : it.desc;
+                return (
+                  <div className="item" key={it.name}>
+                    <div className="main">
+                      <h3>
+                        {it.name}{" "}
+                        {it.diet ? <span className="flag">{it.diet}</span> : null}
+                        {it.badge ? <span className="flag">{it.badge}</span> : null}
+                      </h3>
+                      {desc ? <p>{desc}</p> : null}
+                    </div>
+                    <div className="price">
+                      {it.price}
+                      {it.price12 ? <small>12&quot; {it.price12}</small> : null}
+                    </div>
                   </div>
-                  <div className="price">
-                    {it.price}
-                    {it.price12 ? <small>12&quot; {it.price12}</small> : null}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ))}
         </div>
 
         <p className="legend">
-          <b>L</b> Lactose-free &nbsp;·&nbsp; <b>G</b> Gluten-free &nbsp;·&nbsp; <b>LG</b> both &nbsp;·&nbsp; Subs
-          available 6&quot; / 12&quot;
+          <b>L</b> {t.legendL} &nbsp;·&nbsp; <b>G</b> {t.legendG} &nbsp;·&nbsp; <b>LG</b> {t.legendLG} &nbsp;·&nbsp;{" "}
+          {t.legendSubs}
         </p>
       </div>
     </section>

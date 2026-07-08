@@ -1,29 +1,27 @@
-export default function About() {
+import { dict, type Locale } from "@/lib/i18n";
+
+export default function About({ locale }: { locale: Locale }) {
+  const t = dict[locale].about;
   return (
     <section className="about" id="about">
       <div className="wrap grid">
         <div className="media reveal">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/about-sub.webp" alt="Roba Deli handcrafted sub wrapped in deli paper" loading="lazy" decoding="async" />
-          <span className="tag">Made to order on Iso Roobertinkatu</span>
+          <span className="tag">{t.mediaTag}</span>
         </div>
         <div className="reveal">
-          <span className="eyebrow">The deli</span>
+          <span className="eyebrow">{t.eyebrow}</span>
           <h2>
-            An authentic <em>New York deli</em> on Iso Roobertinkatu
+            {t.titlePre}<em>{t.titleEm}</em>{t.titlePost}
           </h2>
-          <p>
-            Roba Deli is Helsinki&apos;s newest sandwich deli — handcrafted sandwiches, salads &amp; provisions built to
-            order at the counter, never pre-wrapped. Real raclette scraped molten over slow-cooked brisket. Fresh-baked
-            craft brioche and sourdough focaccia. Gravlax, halloumi, a proper Philly.
-          </p>
+          <p>{t.body}</p>
           <ul className="proof">
-            <li>Raclette &amp; cheese melted over the sandwich, to order.</li>
-            <li>Fresh-baked rolls — craft brioche &amp; sourdough focaccia.</li>
-            <li>Real-fruit smoothies &amp; a fresh-ingredient bar.</li>
-            <li>⭐ 5.0 on Google — a guest literally wrote “100% better than Subway.”</li>
+            {t.proof.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
           </ul>
-          <a className="btn" href="#menu">Explore the menu</a>
+          <a className="btn" href="#menu">{t.cta}</a>
         </div>
       </div>
     </section>

@@ -1,62 +1,70 @@
 // Roba Deli content — single source of truth (from the menu photos + Google listing).
+// Dish names stay English by design; Finnish descriptions (descFi) + category names (nameFi) added.
 
 export type MenuItem = {
   name: string;
   desc?: string;
+  descFi?: string;
   diet?: "L" | "G" | "LG"; // lactose-free / gluten-free / both
   badge?: string; // highlight (e.g. "Signature"), not a dietary flag
   price: string; // single price, or the 6" price for subs
   price12?: string; // 12" price for subs (value only; label added in the UI)
 };
-export type MenuCategory = { name: string; items: MenuItem[] };
+export type MenuCategory = { name: string; nameFi: string; items: MenuItem[] };
 
 export const MENU: MenuCategory[] = [
   {
     name: "Sandwiches",
+    nameFi: "Voileivät",
     items: [
-      { name: "Brisket Raclette Melt", desc: "Slow-cooked brisket, craft brioche, pickles, mustard aioli & barbecue, molten raclette swiss.", badge: "Signature", price: "19,90 €" },
-      { name: "Philly Steak Sub", desc: "Beef, sautéed peppers, onion & mushroom, provolone & cheddar, mustard aioli.", diet: "L", price: "7,90 €", price12: "15,90 €" },
-      { name: "Ultimate Italian", desc: "Sourdough focaccia, salami, smoked turkey, provolone, aioli.", price: "7,90 €", price12: "15,90 €" },
-      { name: "Grilled Chicken Sub", desc: "Grilled corn-fed chicken, fresh veggies, pickles, cheese, white sauce.", price: "7,90 €", price12: "15,90 €" },
-      { name: "Gravlax Sub", desc: "Sourdough focaccia, salmon gravlax, lemon-dill smetana, mango curry, pickled onion, rucola & capers.", diet: "L", price: "7,90 €", price12: "15,90 €" },
-      { name: "Halumi Sub", desc: "Marinated grilled halloumi, provolone, fresh veggies, muhamara & mango curry.", diet: "L", price: "7,50 €", price12: "13,90 €" },
+      { name: "Brisket Raclette Melt", desc: "Slow-cooked brisket, craft brioche, pickles, mustard aioli & barbecue, molten raclette swiss.", descFi: "Hidaskypsytetty naudanrinta, brioche, suolakurkku, sinappiaioli & barbecue, sulaa raclette-swiss.", badge: "Signature", price: "19,90 €" },
+      { name: "Philly Steak Sub", desc: "Beef, sautéed peppers, onion & mushroom, provolone & cheddar, mustard aioli.", descFi: "Naudanliha, paistettua paprikaa, sipulia & herkkusieniä, provolonea & cheddaria, sinappiaioli.", diet: "L", price: "7,90 €", price12: "15,90 €" },
+      { name: "Ultimate Italian", desc: "Sourdough focaccia, salami, smoked turkey, provolone, aioli.", descFi: "Hapanjuurifocaccia, salami, savustettua kalkkunaa, provolonea, aioli.", price: "7,90 €", price12: "15,90 €" },
+      { name: "Grilled Chicken Sub", desc: "Grilled corn-fed chicken, fresh veggies, pickles, cheese, white sauce.", descFi: "Grillattua maissikanaa, tuoreita vihanneksia, suolakurkkua, juustoa, valkokastike.", price: "7,90 €", price12: "15,90 €" },
+      { name: "Gravlax Sub", desc: "Sourdough focaccia, salmon gravlax, lemon-dill smetana, mango curry, pickled onion, rucola & capers.", descFi: "Hapanjuurifocaccia, graavilohta, sitruuna-tillismetana, mango-curry, pikkelöityä sipulia, rucolaa & kapriksia.", diet: "L", price: "7,90 €", price12: "15,90 €" },
+      { name: "Halumi Sub", desc: "Marinated grilled halloumi, provolone, fresh veggies, muhamara & mango curry.", descFi: "Marinoitua grillattua halloumia, provolonea, tuoreita vihanneksia, muhammaraa & mango-currya.", diet: "L", price: "7,50 €", price12: "13,90 €" },
     ],
   },
   {
     name: "Wraps",
+    nameFi: "Wrapit",
     items: [
-      { name: "Falafel Wrap", desc: "Tortilla, cheese, falafel, fresh veggies, pickles, muhamara & tzatziki.", diet: "L", price: "9,90 €" },
-      { name: "Chicken Shawarma Wrap", desc: "Tortilla, chicken, fresh veggies, white & cheddar sauce.", diet: "L", price: "9,90 €" },
+      { name: "Falafel Wrap", desc: "Tortilla, cheese, falafel, fresh veggies, pickles, muhamara & tzatziki.", descFi: "Tortilla, juustoa, falafelia, tuoreita vihanneksia, suolakurkkua, muhammaraa & tzatzikia.", diet: "L", price: "9,90 €" },
+      { name: "Chicken Shawarma Wrap", desc: "Tortilla, chicken, fresh veggies, white & cheddar sauce.", descFi: "Tortilla, kanaa, tuoreita vihanneksia, valko- & cheddarkastike.", diet: "L", price: "9,90 €" },
     ],
   },
   {
     name: "Salads",
+    nameFi: "Salaatit",
     items: [
-      { name: "Grilled Chicken Caesar", desc: "Gem lettuce, chicken, parmesan, Caesar dressing, croutons.", diet: "LG", price: "13,90 €" },
-      { name: "Gravlax & Dill Potato", desc: "Dill potato, salmon gravlax, lemon smetana, mango curry mayo, capers, spring onions.", diet: "LG", price: "13,90 €" },
-      { name: "Falafel Salad", desc: "Falafel, mixed greens, melon, feta, muhamara sauce.", diet: "LG", price: "11,90 €" },
+      { name: "Grilled Chicken Caesar", desc: "Gem lettuce, chicken, parmesan, Caesar dressing, croutons.", descFi: "Gem-salaattia, kanaa, parmesaania, Caesar-kastike, krutonkeja.", diet: "LG", price: "13,90 €" },
+      { name: "Gravlax & Dill Potato", desc: "Dill potato, salmon gravlax, lemon smetana, mango curry mayo, capers, spring onions.", descFi: "Tilliperunaa, graavilohta, sitruunasmetana, mango-curry-majoneesi, kapriksia, kevätsipulia.", diet: "LG", price: "13,90 €" },
+      { name: "Falafel Salad", desc: "Falafel, mixed greens, melon, feta, muhamara sauce.", descFi: "Falafelia, vihreitä salaatteja, melonia, fetaa, muhammarakastike.", diet: "LG", price: "11,90 €" },
     ],
   },
   {
     name: "Smoothies",
+    nameFi: "Smoothiet",
     items: [
-      { name: "High Protein", desc: "Frozen blueberries, cottage cheese, vanilla whey, almond milk, ground flaxseeds, cinnamon.", diet: "LG", price: "6,50 €" },
-      { name: "Eternal Classics", desc: "Strawberries, raspberry, banana, almond milk, chia seeds.", diet: "LG", price: "6,50 €" },
-      { name: "Tropical", desc: "Papaya, mango, pineapple, lemon juice, chia seeds, banana, Greek yogurt.", diet: "LG", price: "6,50 €" },
+      { name: "High Protein", desc: "Frozen blueberries, cottage cheese, vanilla whey, almond milk, ground flaxseeds, cinnamon.", descFi: "Pakastemustikoita, raejuustoa, vaniljaheraa, mantelimaitoa, jauhettuja pellavansiemeniä, kanelia.", diet: "LG", price: "6,50 €" },
+      { name: "Eternal Classics", desc: "Strawberries, raspberry, banana, almond milk, chia seeds.", descFi: "Mansikoita, vadelmaa, banaania, mantelimaitoa, chia-siemeniä.", diet: "LG", price: "6,50 €" },
+      { name: "Tropical", desc: "Papaya, mango, pineapple, lemon juice, chia seeds, banana, Greek yogurt.", descFi: "Papaijaa, mangoa, ananasta, sitruunamehua, chia-siemeniä, banaania, kreikkalaista jogurttia.", diet: "LG", price: "6,50 €" },
     ],
   },
   {
     name: "Snacks",
+    nameFi: "Naposteltavat",
     items: [
       { name: "Falafel & Muhamara Dip", diet: "LG", price: "4,90 €" },
       { name: "Halumi & Hot Honey Dip", diet: "LG", price: "5,90 €" },
       { name: "Nachos", diet: "LG", price: "4,50 €" },
       { name: "Crisps", diet: "LG", price: "4,50 €" },
-      { name: "Loaded Nachos — Beef / Chicken", desc: "Salsa, jalapeños, cheese, habanero sauce, beef or chicken.", price: "9,50 €" },
+      { name: "Loaded Nachos — Beef / Chicken", desc: "Salsa, jalapeños, cheese, habanero sauce, beef or chicken.", descFi: "Salsaa, jalapenoa, juustoa, habanerokastike, naudanlihaa tai kanaa.", price: "9,50 €" },
     ],
   },
   {
     name: "Drinks",
+    nameFi: "Juomat",
     items: [
       { name: "Coca-Cola / Zero / Fanta / Sprite", price: "3,50 €" },
       { name: "Ginger Beer", price: "4,00 €" },
@@ -71,18 +79,18 @@ export const MENU: MenuCategory[] = [
   },
 ];
 
-export type Smoothie = { name: string; ing: string; price: string; img: string };
+export type Smoothie = { name: string; ing: string; ingFi: string; price: string; img: string };
 export const SMOOTHIES: Smoothie[] = [
-  { name: "High Protein", ing: "Frozen blueberries, cottage cheese, vanilla whey, almond milk, ground flaxseeds, cinnamon.", price: "€6.50", img: "/images/smoothie-blueberry.webp" },
-  { name: "Eternal Classics", ing: "Strawberries, raspberry, banana, almond milk, chia seeds.", price: "€6.50", img: "/images/smoothie-strawberry.webp" },
-  { name: "Tropical", ing: "Papaya, mango, pineapple, lemon juice, chia seeds, banana, Greek yogurt.", price: "€6.50", img: "/images/smoothie-tropical.webp" },
+  { name: "High Protein", ing: "Frozen blueberries, cottage cheese, vanilla whey, almond milk, ground flaxseeds, cinnamon.", ingFi: "Pakastemustikoita, raejuustoa, vaniljaheraa, mantelimaitoa, jauhettuja pellavansiemeniä, kanelia.", price: "€6.50", img: "/images/smoothie-blueberry.webp" },
+  { name: "Eternal Classics", ing: "Strawberries, raspberry, banana, almond milk, chia seeds.", ingFi: "Mansikoita, vadelmaa, banaania, mantelimaitoa, chia-siemeniä.", price: "€6.50", img: "/images/smoothie-strawberry.webp" },
+  { name: "Tropical", ing: "Papaya, mango, pineapple, lemon juice, chia seeds, banana, Greek yogurt.", ingFi: "Papaijaa, mangoa, ananasta, sitruunamehua, chia-siemeniä, banaania, kreikkalaista jogurttia.", price: "€6.50", img: "/images/smoothie-tropical.webp" },
 ];
 
-export type Deal = { k: string; price: string; d: string; note?: string };
+export type Deal = { k: string; kFi: string; price: string; d: string; dFi: string; note?: string; noteFi?: string };
 export const DEALS: Deal[] = [
-  { k: "Lunch deal", price: "€6.99", d: '6" sub or salad · 10:30–15:00' },
-  { k: "Combo deal", price: "€8.99", d: '6" sub + a soft drink' },
-  { k: "Duo deal", price: "€23.99", d: 'Two 12" subs', note: "Excl. Brisket Raclette Melt" },
+  { k: "Lunch deal", kFi: "Lounastarjous", price: "€6.99", d: '6" sub or salad · 10:30–15:00', dFi: '6" sub tai salaatti · 10:30–15:00' },
+  { k: "Combo deal", kFi: "Combo-tarjous", price: "€8.99", d: '6" sub + a soft drink', dFi: '6" sub + virvoitusjuoma' },
+  { k: "Duo deal", kFi: "Duo-tarjous", price: "€23.99", d: 'Two 12" subs', dFi: 'Kaksi 12" subia', note: "Excl. Brisket Raclette Melt", noteFi: "Pl. Brisket Raclette Melt" },
 ];
 
 export type Review = { text: string; who: string };
