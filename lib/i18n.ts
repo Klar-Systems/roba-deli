@@ -116,7 +116,7 @@ export const dict = {
     hero: {
       eyebrow: "Iso Roobertinkatu · Helsinki",
       title1: "Käsintehdyt",
-      title2: "voileivät",
+      title2: "leivät",
       titleEm: "wrapit & herkut",
       intro:
         "Helsingin uusin deli Iso Roobertinkadulla. Kuumaa, tuoretta, juustoista, valmistetaan tilauksesta, lounaasta myöhään iltaan.",
