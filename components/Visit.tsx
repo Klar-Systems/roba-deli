@@ -31,7 +31,6 @@ export default function Visit({ locale }: { locale: Locale }) {
                   <br />
                 </span>
               ))}
-              <small style={{ color: "var(--muted)" }}>{t.lunchDeal}</small>
             </div>
           </div>
           <div className="tags">

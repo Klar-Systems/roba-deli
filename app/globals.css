@@ -108,8 +108,8 @@ section{position:relative;padding:108px 0;z-index:1}
 .proof li::before{content:"";flex:none;width:7px;height:7px;margin-top:8px;background:var(--gold);transform:rotate(45deg)}
 
 /* deals */
-.deals{background:var(--ink)}
-.deals .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.deals{background:var(--ink);padding-bottom:72px}
+.deals .grid{display:grid;grid-template-columns:repeat(2,minmax(0,360px));justify-content:center;gap:22px}
 .deal{border:1px solid var(--line);background:linear-gradient(180deg,var(--ink-3),var(--ink-2));padding:38px 30px;text-align:center;transition:.45s var(--ease)}
 .deal:hover{transform:translateY(-6px);border-color:var(--gold);box-shadow:var(--shadow)}
 .deal .k{font-family:var(--font-montserrat);font-weight:600;letter-spacing:.22em;text-transform:uppercase;font-size:12px;color:var(--gold)}
@@ -118,7 +118,7 @@ section{position:relative;padding:108px 0;z-index:1}
 .deal .note{color:var(--gold-deep);font-size:11px;margin-top:10px;letter-spacing:.04em}
 
 /* menu */
-.menu{background:var(--ink-2)}
+.menu{background:var(--ink-2);padding-top:80px}
 .tabs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:48px}
 .tabs button{font-family:var(--font-montserrat);font-weight:600;font-size:12px;letter-spacing:.12em;text-transform:uppercase;
   padding:11px 22px;border:1px solid var(--line);background:transparent;color:var(--cream);cursor:pointer;transition:.3s var(--ease)}

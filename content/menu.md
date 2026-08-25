@@ -58,6 +58,5 @@ Coke / Coke Zero / Fanta / Sprite 3.5 · Ginger Beer 3.5 · Water 3 · Juice 3.5
 
 ## Deals
 
-- **Lunch Deal** — 6" sub *or* salad **€6.99** (10:30–15:00)
 - **Combo Deal** — 6" sub + soft drink **€8.99**
 - **Duo Deal** — two 12" subs **€23.99** (excl. Brisket Raclette Melt)
