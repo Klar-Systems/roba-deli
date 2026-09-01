@@ -75,7 +75,6 @@ export const SMOOTHIES: Smoothie[] = [
 
 export type Deal = { k: string; kFi: string; price: string; d: string; dFi: string; note?: string; noteFi?: string };
 export const DEALS: Deal[] = [
-  { k: "Lunch deal", kFi: "Lounastarjous", price: "€6.99", d: "S sub · 10:30–15:00", dFi: "S sub · 10:30–15:00" },
   { k: "Combo deal", kFi: "Combo-tarjous", price: "€8.99", d: "S sub + a soft drink", dFi: "S sub + virvoitusjuoma" },
   { k: "Duo deal", kFi: "Duo-tarjous", price: "€23.99", d: "Two L subs", dFi: "Kaksi L-subia", note: "Excl. Pastrami Burger", noteFi: "Pl. Pastrami Burger" },
 ];

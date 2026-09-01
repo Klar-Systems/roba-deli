@@ -77,9 +77,11 @@ not open questions. Anything sourced from the boards needs his say-so first.
 
 ## Deals
 
-- **Lunch Deal** — S sub **€6.99** (10:30–15:00)
 - **Combo Deal** — S sub + soft drink **€8.99**
 - **Duo Deal** — two L subs **€23.99** (excl. Pastrami Burger)
+
+The €6.99 Lunch Deal was removed on 2026-08-25 (`bb9fa35`). The board photos
+still advertise it; they are not the menu.
 
 ## Changing the menu
 
