@@ -37,8 +37,13 @@ IMAGE-PROMPTS.md    # AI prompts for clean replacement imagery
   and spin on hover.
 - Soft reveals, parallax, gold hover states. All respect `prefers-reduced-motion`.
 
+## Menu — which file is the truth
+
+`lib/data.ts` is authoritative and is what robadeli.fi serves; `content/menu.md`
+mirrors it. The three `content/menu-*.png` board photos are the **June 2026**
+in-store screens, superseded by the owner-approved content of 2026-07-04
+(`432ec02`). Do not transcribe from the photos. See `content/menu.md`.
+
 ## To finalize
 
 1. Replace placeholder imagery via `IMAGE-PROMPTS.md` (esp. `hero-scrape.mp4`).
-2. Confirm two Snacks prices (Crisps, Loaded Nachos — shown as `—` in `lib/data.ts`).
-3. Add the exact daily **closing time** (opening 10:30 is known).
