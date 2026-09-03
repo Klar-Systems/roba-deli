@@ -140,6 +140,14 @@ section{position:relative;padding:108px 0;z-index:1}
 .legend{text-align:center;margin-top:42px;font-size:12px;color:var(--muted);letter-spacing:.06em}
 .legend b{color:var(--gold)}
 
+/* "you can order here" — a bordered panel above the tabs, in the site's gold on
+   its own ground, so it is unmistakably part of the design and not a warning. */
+.order-here{max-width:560px;margin:-18px auto 40px;padding:16px 22px;text-align:center;
+  border:1px solid var(--gold);background:rgba(184,164,90,.08)}
+.order-here b{display:block;font-family:var(--font-montserrat);font-weight:700;font-size:12.5px;
+  letter-spacing:.22em;text-transform:uppercase;color:var(--gold-2);margin-bottom:7px}
+.order-here span{display:block;font-size:14px;color:var(--cream)}
+
 /* ordering, inside the menu rows — one ruokalista, not two.
    The buttons appear only once the Klar menu has loaded, so nothing shifts
    under a visitor who is already reading, and nothing is offered that the

@@ -108,6 +108,10 @@ export default function Menu({ locale }: { locale: Locale }) {
     mount.dispatchEvent(new CustomEvent("klar:add", { detail: { id, qty: 1 } }));
   }, []);
 
+  /* null = not landed yet, {} = the ordering API is dark. Either way no row has
+     a button, so nothing may say the guest can order here. */
+  const orderable = byName !== null && Object.keys(byName).length > 0;
+
   return (
     <section className="menu" id="menu">
       <div className="wrap">
@@ -118,6 +122,18 @@ export default function Menu({ locale }: { locale: Locale }) {
           </h2>
           <div className="rule"></div>
         </div>
+
+        {/* The one sign that this list is orderable and not a printed menu. It
+            appears with the buttons and disappears with them, so the page never
+            invites an order the kitchen cannot take. No `reveal` class: ScrollFX
+            observes once on mount, and this box arrives later — it would stay at
+            opacity 0 forever. */}
+        {orderable ? (
+          <div className="order-here">
+            <b>{t.orderHereTitle}</b>
+            <span>{t.orderHereBody}</span>
+          </div>
+        ) : null}
 
         <div className="tabs reveal">
           {MENU.map((c, i) => (
