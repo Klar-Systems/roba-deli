@@ -146,8 +146,11 @@ section{position:relative;padding:108px 0;z-index:1}
    kitchen cannot actually take. */
 .item .side{display:flex;flex-direction:column;align-items:flex-end;gap:9px}
 .item .adds{display:flex;gap:6px}
+/* A resting add button must not resemble the diet flag on the same row — same
+   box, same grey border, and on a sub the same letter. Gold border and a faint
+   gold ground separate the thing you press from the thing you read. */
 .item .add{font-family:var(--font-montserrat);font-weight:600;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
-  padding:6px 12px;border:1px solid var(--line);background:transparent;color:var(--cream);cursor:pointer;
+  padding:6px 12px;border:1px solid var(--gold);background:rgba(184,164,90,.10);color:var(--gold-2);cursor:pointer;
   white-space:nowrap;transition:.25s var(--ease)}
 .item .add:hover{border-color:var(--gold);background:rgba(184,164,90,.12);color:#fff}
 .item .add.on{background:var(--gold);border-color:var(--gold);color:var(--ink)}

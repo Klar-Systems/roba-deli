@@ -27,8 +27,11 @@ type Portion = { label: string; apiName: string };
 function portions(item: MenuItem, addLabel: string): Portion[] {
   if (item.price12) {
     return [
-      { label: "S", apiName: `${item.name} (S)` },
-      { label: "L", apiName: `${item.name} (L)` },
+      /* The "+" is load-bearing: a bare "L" is the same glyph, size and box as
+         the lactose-free flag two columns to the left, so it read as a badge and
+         nobody pressed it. */
+      { label: "+ S", apiName: `${item.name} (S)` },
+      { label: "+ L", apiName: `${item.name} (L)` },
     ];
   }
   return [{ label: addLabel, apiName: item.orderName ?? item.name }];
