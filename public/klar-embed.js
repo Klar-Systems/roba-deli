@@ -238,6 +238,7 @@
     '.klar-qty button{width:30px;height:30px;border:1px solid var(--klar-line);background:',
     'transparent;border-radius:8px;cursor:pointer;font:inherit;color:inherit;line-height:1}',
     '.klar-seg{display:flex;gap:8px;margin:14px 0}',
+    '.klar-only-ful{margin:14px 0 0;font-size:.85rem;color:var(--klar-muted)}',
     '.klar-seg button{flex:1;padding:10px;border:1px solid var(--klar-line);background:',
     'transparent;border-radius:var(--klar-radius);cursor:pointer;font:inherit;color:inherit}',
     '.klar-seg button.klar-on{background:var(--klar-accent);color:var(--klar-on-accent);',
@@ -582,14 +583,17 @@
             );
           })
           .join('') +
-        '<div class="klar-seg">' +
+        /* A takeaway-only restaurant has nothing to choose between. Rendering
+           the one option as a button made it look like a second call to action
+           sitting above the real one — so a single option states itself. */
         (allowsEatIn
-          ? '<button type="button" data-klar-ful="eat_in" class="' +
-            (fulfilment === 'eat_in' ? 'klar-on' : '') + '">' + esc(t.eatIn) + '</button>'
-          : '') +
-        '<button type="button" data-klar-ful="takeaway" class="' +
-        (fulfilment === 'takeaway' ? 'klar-on' : '') + '">' + esc(t.takeaway) + '</button>' +
-        '</div>' +
+          ? '<div class="klar-seg">' +
+            '<button type="button" data-klar-ful="eat_in" class="' +
+            (fulfilment === 'eat_in' ? 'klar-on' : '') + '">' + esc(t.eatIn) + '</button>' +
+            '<button type="button" data-klar-ful="takeaway" class="' +
+            (fulfilment === 'takeaway' ? 'klar-on' : '') + '">' + esc(t.takeaway) + '</button>' +
+            '</div>'
+          : '<p class="klar-only-ful">' + esc(t.takeaway) + '</p>') +
         '<div class="klar-field"><label>' + esc(t.name) + '</label>' +
         '<input type="text" autocomplete="name" data-klar="oname" placeholder="' +
         esc(t.namePlaceholder) + '" value="' + esc(orderName) + '"></div>' +
