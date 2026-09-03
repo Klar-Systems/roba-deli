@@ -31,6 +31,24 @@
  * nothing until an operator adds its production origin there. When that has not
  * happened the embed shows its unavailable panel and logs the reason — it never
  * renders an empty box.
+ *
+ * HOST-MENU MODE — data-klar-menu="host". A site that already has a designed
+ * menu section must not grow a second one: the embed then renders the cart and
+ * checkout ONLY, and the site's own markup does the adding. The contract is
+ * four DOM events on the mount element (all bubble, so document works too):
+ *
+ *   klar:menu         out  { categories, currency, allowsEatIn, client }
+ *   klar:menu-failed  out  { reason }            the surface is dark; hide buttons
+ *   klar:cart         out  { lines, count, totalCents, currency }
+ *   klar:add          in   { id, qty }           qty defaults 1, may be negative
+ *   klar:sync         in   —  (on document) re-emits the last menu and cart
+ *
+ * klar:sync exists because the host's listener and the embed's fetch race: a
+ * host that mounts late asks for a replay instead of waiting forever. An id the
+ * loaded menu does not carry is refused and logged — a host whose names have
+ * drifted from the database gets a visibly missing button, never a silent one.
+ *
+ * Prices still come from the server in host-menu mode. The host sends ids.
  */
 (function () {
   'use strict';
@@ -344,6 +362,9 @@
       bookSlug: (data.klarBookSlug || slug).trim(),
       order: surfaces.indexOf('order') !== -1,
       book: surfaces.indexOf('book') !== -1,
+      /* "host" = the page already renders the menu; the embed contributes the
+         cart and checkout only. Anything else keeps the embed's own list. */
+      hostMenu: (data.klarMenu || '').trim().toLowerCase() === 'host',
       api: (data.klarApi || defaultApi(loc)).replace(/\/$/, ''),
       phone: (data.klarPhone || '').trim(),
       timezone: (data.klarTimezone || 'Europe/Helsinki').trim(),
@@ -362,6 +383,17 @@
 
     injectStyles(doc);
     mount.classList.add('klar-embed');
+    if (cfg.hostMenu) mount.classList.add('klar-host-menu');
+
+    /* The host-menu contract. Bubbling so a host can listen on document rather
+     * than having to find the mount element it did not render itself. */
+    function emit(name, detail) {
+      try {
+        mount.dispatchEvent(new win.CustomEvent(name, { detail: detail, bubbles: true }));
+      } catch (error) {
+        warn('could not dispatch ' + name + '.', error);
+      }
+    }
 
     function callUs() {
       return cfg.phone ? ' ' + t.callUs + ' ' + cfg.phone + '.' : '';
@@ -398,7 +430,12 @@
         ? '<div class="klar-panel klar-on" data-klar-panel="order">' +
           '<div data-klar="order-live">' +
           '<div class="klar-cats" data-klar="cats" hidden></div>' +
-          '<div data-klar="items"><p class="klar-muted">' + esc(t.menuLoading) + '</p></div>' +
+          /* In host-menu mode the page is already showing the menu, so this
+             slot starts empty and hidden. It is un-hidden only to carry the
+             fail-closed "call us" panel. */
+          (cfg.hostMenu
+            ? '<div data-klar="items" hidden></div>'
+            : '<div data-klar="items"><p class="klar-muted">' + esc(t.menuLoading) + '</p></div>') +
           '<div class="klar-cart" data-klar="cart"></div>' +
           '</div><div data-klar="order-ok" class="klar-ok" hidden></div></div>'
         : '') +
@@ -471,6 +508,9 @@
     var orderName = '';
     var orderPhone = '';
     var orderErr = '';
+    /* Kept so klar:sync can replay them to a host that mounted late. */
+    var lastMenu = null;
+    var lastCart = null;
 
     function lineFor(id) {
       for (var i = 0; i < cart.length; i++) if (cart[i].id === id) return cart[i];
@@ -487,6 +527,7 @@
     }
 
     function renderItems() {
+      if (cfg.hostMenu) return;
       var category = categories[activeCat];
       if (!category) return;
       itemsWrap.innerHTML = category.items
@@ -512,6 +553,15 @@
       if (!cartWrap) return;
       var count = cart.reduce(function (sum, line) { return sum + line.qty; }, 0);
       var total = cart.reduce(function (sum, line) { return sum + line.cents * line.qty; }, 0);
+      lastCart = {
+        lines: cart.map(function (line) {
+          return { id: line.id, name: line.name, cents: line.cents, qty: line.qty };
+        }),
+        count: count,
+        totalCents: total,
+        currency: currency
+      };
+      emit('klar:cart', lastCart);
       if (cart.length === 0) {
         cartWrap.innerHTML =
           '<h3>' + esc(t.cartTitle) + '</h3><p class="klar-muted">' + esc(t.cartEmpty) + '</p>';
@@ -569,8 +619,21 @@
       if (first && first.currency) currency = first.currency;
       if (categories.length === 0) {
         warn('menu for "' + cfg.orderSlug + '" has no orderable categories.');
+        itemsWrap.hidden = false;
         itemsWrap.innerHTML = '<p class="klar-muted">' + esc(t.orderingOff + callUs()) + '</p>';
         if (cartWrap) cartWrap.hidden = true;
+        emit('klar:menu-failed', { reason: 'empty' });
+        return;
+      }
+      lastMenu = {
+        categories: categories,
+        currency: currency,
+        allowsEatIn: allowsEatIn,
+        client: data.client || null
+      };
+      emit('klar:menu', lastMenu);
+      if (cfg.hostMenu) {
+        renderCart();
         return;
       }
       catsWrap.hidden = false;
@@ -607,11 +670,15 @@
             error
           );
           if (catsWrap) catsWrap.hidden = true;
+          /* Host-menu mode keeps this slot hidden while things work; the
+             fail-closed panel is the one thing it must still show. */
+          itemsWrap.hidden = false;
           itemsWrap.innerHTML =
             '<p class="klar-muted">' +
             esc((/ 404$/.test(error.message) ? t.orderingOff : t.menuFailed) + callUs()) +
             '</p>';
           if (cartWrap) cartWrap.hidden = true;
+          emit('klar:menu-failed', { reason: error && error.message ? error.message : 'failed' });
         });
     }
 
@@ -693,21 +760,55 @@
         });
     }
 
+    /* The one way anything enters the cart — the embed's own buttons and a
+     * host site's klar:add both come through here, so an id the loaded menu
+     * does not carry is refused once, in one place. */
+    function addToCart(id, qty) {
+      var step = typeof qty === 'number' && qty ? Math.round(qty) : 1;
+      var item = itemById(id);
+      if (!item) {
+        warn(
+          'klar:add refused — "' + id + '" is not an item on the loaded menu for "' +
+            cfg.orderSlug + '".'
+        );
+        return false;
+      }
+      if (item.available === false) {
+        warn('klar:add refused — "' + item.name + '" is not available.');
+        return false;
+      }
+      var line = lineFor(id);
+      if (line) {
+        line.qty += step;
+        if (line.qty <= 0) cart = cart.filter(function (other) { return other.id !== id; });
+      } else if (step > 0) {
+        cart.push({ id: item.id, name: item.name, cents: item.priceCents, qty: step });
+      } else {
+        return false;
+      }
+      cartChanged();
+      renderItems();
+      renderCart();
+      return true;
+    }
+
     if (cfg.order) {
       itemsWrap.addEventListener('click', function (event) {
         var button = event.target.closest('button[data-klar-add]');
         if (!button || button.disabled) return;
-        var id = button.dataset.klarAdd;
-        var line = lineFor(id);
-        if (line) line.qty += 1;
-        else {
-          var item = itemById(id);
-          if (!item) return;
-          cart.push({ id: item.id, name: item.name, cents: item.priceCents, qty: 1 });
-        }
-        cartChanged();
-        renderItems();
-        renderCart();
+        addToCart(button.dataset.klarAdd, 1);
+      });
+
+      mount.addEventListener('klar:add', function (event) {
+        var detail = event.detail || {};
+        addToCart(detail.id, detail.qty);
+      });
+
+      /* A host that mounted after the menu landed asks for the state again
+         rather than waiting for an event that has already been and gone. */
+      doc.addEventListener('klar:sync', function () {
+        if (lastMenu) emit('klar:menu', lastMenu);
+        if (lastCart) emit('klar:cart', lastCart);
       });
 
       catsWrap.addEventListener('click', function (event) {

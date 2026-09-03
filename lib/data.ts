@@ -11,6 +11,13 @@ export type MenuItem = {
   fav?: boolean; // gold "★ Favorite" pill
   price: string; // single price, or the small (S) price for subs
   price12?: string; // large (L) price for subs (value only; label added in the UI)
+  // The name this dish carries on the Klar ordering menu, when it is not `name`.
+  // Ordering matches by exact name: a row with `price12` resolves to "<name> (S)"
+  // and "<name> (L)", everything else to `orderName ?? name`. A row that does not
+  // resolve simply shows no order button and says so in the console — the menus
+  // are never allowed to disagree quietly. Only needed where the database name
+  // carries something the site prints as a badge instead.
+  orderName?: string;
 };
 export type MenuCategory = { name: string; nameFi: string; items: MenuItem[] };
 
@@ -30,7 +37,7 @@ export const MENU: MenuCategory[] = [
     nameFi: "Wrapit",
     items: [
       { name: "Chicken Shwarma", desc: "Lawash nan, garlic sauce, pomegranate molasses, pickles, sumac & grilled chicken shawarma.", descFi: "Lawash-leipä, valkosipulikastike, granaattiomenasiirappi, suolakurkku, sumakkia & grillattua kana-shawarmaa.", diet: "L", price: "9,90 €" },
-      { name: "Falafel Pita", desc: "Falafel, pita, tahini & amba sauce, roasted eggplant, harissa paste, pickles & fresh greens.", descFi: "Falafelia, pita, tahini- & amba-kastike, paahdettua munakoisoa, harissatahnaa, suolakurkkua & tuoreita vihanneksia.", diet: "L", badge: "Vegan", badgeFi: "Vegaani", price: "9,90 €" },
+      { name: "Falafel Pita", desc: "Falafel, pita, tahini & amba sauce, roasted eggplant, harissa paste, pickles & fresh greens.", descFi: "Falafelia, pita, tahini- & amba-kastike, paahdettua munakoisoa, harissatahnaa, suolakurkkua & tuoreita vihanneksia.", diet: "L", badge: "Vegan", badgeFi: "Vegaani", price: "9,90 €", orderName: "Falafel Pita (Vegaani)" },
     ],
   },
   {
