@@ -979,6 +979,18 @@
         { rootMargin: '600px' }
       );
       observer.observe(mount);
+
+      /* Warm it once the page is otherwise idle, so the section is ALREADY
+         filled when the visitor reaches it. 600px of rootMargin still means the
+         menu is fetched while they are scrolling towards it, and on a slow
+         connection they arrive at "Loading the menu…" — which reads as broken
+         rather than as loading. The observer stays: it is what catches a visitor
+         who lands mid-page, and start() is idempotent. */
+      if (win.requestIdleCallback) {
+        win.requestIdleCallback(start, { timeout: 2000 });
+      } else {
+        win.setTimeout(start, 1200);
+      }
     } else {
       start();
     }
