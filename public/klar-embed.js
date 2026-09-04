@@ -124,11 +124,22 @@
       callUs: 'Soita',
       badPhone: 'Tarkista puhelinnumero (esim. +358 40 123 4567).',
       tooMany: 'Liikaa yrityksiä. Odota hetki ja yritä uudelleen.',
+      /* The kitchen is shut. `closedDay` and `closedDate` stand alone; the other
+         two carry the time out of the API's `ordering` block, which is why they
+         are templates and not finished sentences. */
+      closedDay: 'Ravintola on tänään suljettu, emmekä ota tilauksia vastaan.',
+      closedDate: 'Ravintola on kiinni tänä päivänä, emmekä ota tilauksia vastaan.',
+      beforeOpen: 'Keittiö avaa klo {time}.',
+      afterLastOrder: 'Keittiö ottaa tilauksia klo {time} asti.',
+      closedNow: 'Emme ota tilauksia juuri nyt.',
       codes: {
         ORDER_REJECTED: 'Jokin valitsemasi annos ei ole juuri nyt saatavilla. Poista se tilauksesta.',
         VALIDATION_ERROR: 'Tarkista tilauksen tiedot.',
         IDEMPOTENCY_CONFLICT: 'Tämä tilaus on jo lähetetty.',
-        PAYLOAD_TOO_LARGE: 'Tilaus on liian suuri verkkotilaukseen.'
+        PAYLOAD_TOO_LARGE: 'Tilaus on liian suuri verkkotilaukseen.',
+        /* Reached only if a refusal arrives with no `ordering` block to read a
+           reason out of. The specific sentence is always preferred. */
+        ORDERING_CLOSED: 'Emme ota tilauksia juuri nyt.'
       }
     },
     en: {
@@ -190,11 +201,17 @@
       callUs: 'Call',
       badPhone: 'Check the phone number (e.g. +358 40 123 4567).',
       tooMany: 'Too many attempts. Wait a moment and try again.',
+      closedDay: 'The restaurant is closed today and is not taking orders.',
+      closedDate: 'The restaurant is closed on this date and is not taking orders.',
+      beforeOpen: 'The kitchen opens at {time}.',
+      afterLastOrder: 'The kitchen stops taking orders at {time}.',
+      closedNow: 'We are not taking orders right now.',
       codes: {
         ORDER_REJECTED: 'One of the dishes you picked is not available right now. Remove it from the order.',
         VALIDATION_ERROR: 'Check the order details.',
         IDEMPOTENCY_CONFLICT: 'This order has already been sent.',
-        PAYLOAD_TOO_LARGE: 'The order is too large for online ordering.'
+        PAYLOAD_TOO_LARGE: 'The order is too large for online ordering.',
+        ORDERING_CLOSED: 'We are not taking orders right now.'
       }
     }
   };
@@ -268,6 +285,13 @@
     '.klar-slots button[disabled]{opacity:.35;cursor:default;text-decoration:line-through}',
     '.klar-muted{color:var(--klar-muted);font-size:.9rem}',
     '.klar-err{margin:12px 0 0;color:#a3341f;font-size:.9rem}',
+    /* "We are shut" is a fact about the restaurant, not the guest's mistake, so
+       it is deliberately NOT the red of .klar-err — it is a plain, calm notice
+       that still has to be impossible to miss above a menu. */
+    /* No background colour: the host site sets its own ground and this embed
+       has no token for it. Border and padding carry the notice everywhere. */
+    '.klar-closed{margin:0 0 16px;padding:12px 14px;border:1px solid var(--klar-line);' +
+      'border-radius:var(--klar-radius);font-size:.92rem;line-height:1.45}',
     '.klar-note{margin:10px 0 0;font-size:.78rem;color:var(--klar-muted)}',
     '.klar-ok{text-align:center;padding:26px 0}',
     '.klar-check{font-size:2rem;line-height:1}',
@@ -513,6 +537,44 @@
     var lastMenu = null;
     var lastCart = null;
 
+    /* The kitchen's window, as `GET /menu` publishes it on `client.ordering`.
+     *
+     * WHY THIS IS READ AT ALL. The API has refused orders outside opening hours
+     * since 2026-09-03, and this embed did not read the answer — so a guest on a
+     * closed day got every add button, built a whole basket, pressed send, and
+     * only then met a 400. Worse, `ORDERING_CLOSED` was not in `t.codes`, so the
+     * refusal fell through to `generic` and told them the CONNECTION had failed.
+     * A customer standing in the shop was informed the internet was broken.
+     *
+     * IT FAILS OPEN, matching the server. Null here means "nothing we read
+     * refuses this" — a legacy payload with no `ordering` key, or an older API,
+     * must not lose the restaurant its ordering. Only an explicit
+     * `open === false` closes the surface. The server is still the enforcement;
+     * this is only what the guest is told, and when.
+     */
+    var ordering = null;
+
+    function orderingClosed() {
+      return !!ordering && ordering.open === false;
+    }
+
+    /* The sentence a guest reads, built from the reason the server gave rather
+     * than from `body.error` — the API writes that string in English and this
+     * embed renders in the site's own language. Same rule as `t.codes`. */
+    function orderingClosedText() {
+      if (!orderingClosed()) return '';
+      var reason = ordering.reason;
+      if (reason === 'closed_day') return t.closedDay;
+      if (reason === 'closed_date') return t.closedDate;
+      if (reason === 'before_open' && ordering.opensAt) {
+        return t.beforeOpen.replace('{time}', ordering.opensAt);
+      }
+      if (reason === 'after_last_order' && ordering.lastOrderTime) {
+        return t.afterLastOrder.replace('{time}', ordering.lastOrderTime);
+      }
+      return t.closedNow;
+    }
+
     function lineFor(id) {
       for (var i = 0; i < cart.length; i++) if (cart[i].id === id) return cart[i];
       return null;
@@ -531,7 +593,13 @@
       if (cfg.hostMenu) return;
       var category = categories[activeCat];
       if (!category) return;
-      itemsWrap.innerHTML = category.items
+      /* The menu and its prices STAY on the page when the kitchen is shut —
+         a closed restaurant still wants to be read. Only the ordering
+         affordance goes, and the notice says why. */
+      var shut = orderingClosed();
+      itemsWrap.innerHTML =
+        (shut ? '<p class="klar-closed">' + esc(orderingClosedText()) + '</p>' : '') +
+        category.items
         .map(function (item) {
           var line = lineFor(item.id);
           var qty = line ? line.qty : 0;
@@ -541,10 +609,16 @@
             (item.description ? '<p>' + esc(item.description) + '</p>' : '') +
             '</div><div class="klar-side"><span class="klar-price">' +
             esc(money(item.priceCents, item.currency || currency)) + '</span>' +
-            '<button type="button" class="klar-add" data-klar-add="' + esc(item.id) + '"' +
-            (disabled ? ' disabled' : '') + '>' +
-            (qty > 0 ? esc(t.addMore) + ' · ' + qty : esc(t.add)) +
-            '</button></div></div>'
+            /* No button at all when the kitchen is shut, rather than a disabled
+               one: a greyed control still reads as "this will work if I press
+               it right", and the notice above has already said it will not. */
+            (shut
+              ? ''
+              : '<button type="button" class="klar-add" data-klar-add="' + esc(item.id) + '"' +
+                (disabled ? ' disabled' : '') + '>' +
+                (qty > 0 ? esc(t.addMore) + ' · ' + qty : esc(t.add)) +
+                '</button>') +
+            '</div></div>'
           );
         })
         .join('');
@@ -563,6 +637,29 @@
         currency: currency
       };
       emit('klar:cart', lastCart);
+      /* Shut. In host-menu mode this IS the whole surface, so the notice has to
+         live here too — the host's own rows are outside this embed's reach and
+         it learns the state from `klar:menu`. Anything already in the basket
+         stays listed, because telling someone their choices vanished is a
+         second bad surprise; only the checkout goes. */
+      if (orderingClosed()) {
+        cartWrap.innerHTML =
+          '<h3>' + esc(t.cartTitle) + '</h3>' +
+          '<p class="klar-closed">' + esc(orderingClosedText()) + callUs() + '</p>' +
+          (cart.length
+            ? cart
+                .map(function (line) {
+                  return (
+                    '<div class="klar-line"><span class="klar-ln">' + esc(line.name) +
+                    '</span><span class="klar-qty">' + line.qty + '</span>' +
+                    '<span class="klar-lp">' +
+                    esc(money(line.cents * line.qty, currency)) + '</span></div>'
+                  );
+                })
+                .join('')
+            : '');
+        return;
+      }
       if (cart.length === 0) {
         cartWrap.innerHTML =
           '<h3>' + esc(t.cartTitle) + '</h3><p class="klar-muted">' + esc(t.cartEmpty) + '</p>';
@@ -629,10 +726,19 @@
         emit('klar:menu-failed', { reason: 'empty' });
         return;
       }
+      /* The kitchen's window, before anything renders — `renderItems` and
+         `renderCart` both branch on it. Absent means open, per `ordering`'s
+         fail-open contract above. */
+      ordering = (data.client && data.client.ordering) || null;
       lastMenu = {
         categories: categories,
         currency: currency,
         allowsEatIn: allowsEatIn,
+        /* Hoisted out of `client` so a host menu has one documented place to
+           read it. Roba Deli's own ruokalista carries the order buttons in
+           host-menu mode, and they are outside this embed's reach — this event
+           is the only way it learns the shop is shut. */
+        ordering: ordering,
         client: data.client || null
       };
       emit('klar:menu', lastMenu);
@@ -742,6 +848,28 @@
           sending = false;
           if (!result.ok) {
             warn('order rejected for "' + cfg.orderSlug + '" (' + result.status + ').', result.body);
+            /* The kitchen shut between loading the menu and pressing send —
+               the guest sat on the page past the last order time, or the venue
+               closed the day underneath them. The refusal carries the same
+               `ordering` block `GET /menu` publishes, deliberately, so adopting
+               it here needs no second reader: the surface re-renders closed and
+               states the real reason instead of leaving a submit button that
+               will never work. */
+            if (result.body && result.body.code === 'ORDERING_CLOSED') {
+              if (result.body.ordering) {
+                ordering = result.body.ordering;
+                if (lastMenu) {
+                  lastMenu.ordering = ordering;
+                  lastMenu.client = lastMenu.client || {};
+                  lastMenu.client.ordering = ordering;
+                  emit('klar:menu', lastMenu);
+                }
+              }
+              orderErr = '';
+              renderItems();
+              renderCart();
+              return;
+            }
             orderErr =
               result.status === 429
                 ? t.tooMany

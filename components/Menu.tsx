@@ -48,6 +48,24 @@ export default function Menu({ locale }: { locale: Locale }) {
   useEffect(() => {
     function onMenu(event: Event) {
       const detail = (event as CustomEvent).detail;
+
+      /* The kitchen is shut — a closed weekday, a one-off closure, before
+         opening, or past the last order time. These rows carry the order
+         buttons in host-menu mode, so the embed cannot take them away: it
+         publishes the window on klar:menu and this is the only place that can
+         act on it. Treated exactly like the API being dark, because the guest
+         outcome is the same — the menu and its prices stay, every button goes,
+         and the embed's own panel states the reason. Absent means open, so an
+         older embed that does not publish the block loses nothing.
+
+         Without this a guest on a closed day filled a whole basket and was
+         told at the end that the CONNECTION had failed. */
+      if (detail?.ordering && detail.ordering.open === false) {
+        setByName({});
+        setQty({});
+        return;
+      }
+
       const map: Record<string, ApiItem> = {};
       for (const category of detail?.categories ?? []) {
         for (const item of category.items ?? []) map[item.name] = item;
