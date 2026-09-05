@@ -4,6 +4,7 @@ import Hero from "@/components/Hero";
 import About from "@/components/About";
 import Deals from "@/components/Deals";
 import Menu from "@/components/Menu";
+import KlarOrder from "@/components/KlarOrder";
 import Craft from "@/components/Craft";
 import Smoothies from "@/components/Smoothies";
 import Reviews from "@/components/Reviews";
@@ -22,6 +23,7 @@ export default function SiteContent({ locale }: { locale: Locale }) {
         <About locale={locale} />
         <Deals locale={locale} />
         <Menu locale={locale} />
+        <KlarOrder locale={locale} />
         <Craft locale={locale} />
         <Smoothies locale={locale} />
         <Reviews locale={locale} />
