@@ -76,7 +76,7 @@
       phone: 'Puhelin',
       optional: '(vapaaehtoinen)',
       total: 'Yhteensä',
-      /* The gift card (0066): a PAYMENT toward the total, shown under it and
+      /* The gift card (0067): a PAYMENT toward the total, shown under it and
          never folded into it, with `amountDue` naming what is left to pay. */
       giftCard: 'Lahjakortti',
       giftCardHint: '(jos sinulla on)',
@@ -577,7 +577,7 @@
     var orderName = '';
     var orderPhone = '';
     var orderErr = '';
-    /* The gift card (0066). `giftCode` is what the guest typed; `giftCard` is
+    /* The gift card (0067). `giftCode` is what the guest typed; `giftCard` is
        the one the venue accepted ({ code, balanceCents }) or null; `giftMsg`
        is the line under the field and `giftOk` says whether it is a balance
        or a refusal. The server prices the draw-down itself — the balance
