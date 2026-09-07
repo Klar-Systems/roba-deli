@@ -37,6 +37,39 @@ function portions(item: MenuItem, addLabel: string): Portion[] {
   return [{ label: addLabel, apiName: item.orderName ?? item.name }];
 }
 
+/* "17,90 €" — the same shape lib/data.ts prints, so a live price and a static
+   one are indistinguishable on the page. */
+function money(cents: number): string {
+  return `${(cents / 100).toFixed(2).replace(".", ",")} €`;
+}
+
+type LivePrice = { label: string; gross: string; net: string };
+
+/* The prices the kitchen charges, from the Klar menu — only when EVERY portion
+   of the row resolved, so a row never shows one live price beside one stale
+   one. `net` is the online price after the restaurant's takeaway discount;
+   `gross` is the counter price. Both equal when there is no discount. The
+   figure is per line and indicative; the server prices the order. */
+function livePrices(
+  item: MenuItem,
+  buttons: { portion: Portion; api: ApiItem }[],
+  discount: number
+): LivePrice[] | null {
+  const expected = item.price12 ? 2 : 1;
+  if (buttons.length !== expected) return null;
+  return buttons.map(({ portion, api }) => {
+    const gross = api.priceCents;
+    /* Same arithmetic as the server's takeawayDiscountCents: the discount is
+       rounded UP to the cent and never exceeds the price. */
+    const net = gross - Math.min(Math.ceil((gross * discount) / 100), gross);
+    return {
+      label: item.price12 ? portion.label.replace("+ ", "") : "",
+      gross: money(gross),
+      net: money(discount > 0 ? net : gross),
+    };
+  });
+}
+
 export default function Menu({ locale }: { locale: Locale }) {
   const t = dict[locale].menu;
   const fi = locale === "fi";
@@ -44,10 +77,15 @@ export default function Menu({ locale }: { locale: Locale }) {
   /* null = the ordering menu has not landed yet, so no row shows a button. */
   const [byName, setByName] = useState<Record<string, ApiItem> | null>(null);
   const [qty, setQty] = useState<Record<string, number>>({});
+  /* The restaurant's own takeaway discount, 0–50, from the Klar menu payload.
+     Shown on every resolved row so the page and the checkout agree. */
+  const [discount, setDiscount] = useState(0);
 
   useEffect(() => {
     function onMenu(event: Event) {
       const detail = (event as CustomEvent).detail;
+      const pct = Number(detail?.client?.takeawayDiscountPercent);
+      setDiscount(Number.isFinite(pct) && pct > 0 ? Math.min(50, Math.floor(pct)) : 0);
 
       /* The kitchen is shut — a closed weekday, a one-off closure, before
          opening, or past the last order time. These rows carry the order
@@ -184,10 +222,46 @@ export default function Menu({ locale }: { locale: Locale }) {
                       {desc ? <p>{desc}</p> : null}
                     </div>
                     <div className="side">
-                      <div className="price">
-                        {it.price12 ? `S ${it.price}` : it.price}
-                        {it.price12 ? <small>L {it.price12}</small> : null}
-                      </div>
+                      {/* The moment a row resolves, the price shown is the one
+                          the kitchen charges — edited by the restaurant in its
+                          own Klar panel, not by a commit here. An unresolved
+                          row keeps this file's price, exactly as before. */}
+                      {(() => {
+                        const live = livePrices(it, buttons, discount);
+                        if (!live) {
+                          return (
+                            <div className="price">
+                              {it.price12 ? `S ${it.price}` : it.price}
+                              {it.price12 ? <small>L {it.price12}</small> : null}
+                            </div>
+                          );
+                        }
+                        return (
+                          <div className="price">
+                            {live.map((p, i) =>
+                              i === 0 ? (
+                                <span key={p.label}>
+                                  {p.label ? `${p.label} ` : ""}
+                                  {p.net !== p.gross ? <s>{p.gross}</s> : null}
+                                  {p.net !== p.gross ? " " : ""}
+                                  {p.net}
+                                </span>
+                              ) : (
+                                <small key={p.label}>
+                                  {p.label} {p.net !== p.gross ? <s>{p.gross}</s> : null}
+                                  {p.net !== p.gross ? " " : ""}
+                                  {p.net}
+                                </small>
+                              )
+                            )}
+                            {discount > 0 ? (
+                              <small className="discount-tag">
+                                {t.discountTag.replace("{n}", String(discount))}
+                              </small>
+                            ) : null}
+                          </div>
+                        );
+                      })()}
                       {buttons.length > 0 ? (
                         <div className="adds">
                           {buttons.map(({ portion, api }) => {

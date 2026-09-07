@@ -56,8 +56,9 @@ export const restaurantJsonLd = {
     addressLocality: "Helsinki",
     addressCountry: "FI",
   },
-  hasMap:
-    "https://www.google.com/maps/search/?api=1&query=Iso+Roobertinkatu+1,+00120+Helsinki",
+  // The Place ID is the deli's own Google listing (measured from Maps on
+  // 2026-09-07), so the map link resolves to Roba Deli and not to the street.
+  hasMap: "https://www.google.com/maps/place/?q=place_id:ChIJBzxlKz0LkkYR-cH59jgnhic",
   openingHoursSpecification: [
     {
       "@type": "OpeningHoursSpecification",

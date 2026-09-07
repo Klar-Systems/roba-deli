@@ -78,6 +78,8 @@ export const dict = {
       legendG: "Gluten-free",
       legendLG: "both",
       legendSubs: "Subs available in S / L",
+      /* {n} is the percentage the restaurant set in its own panel. */
+      discountTag: "Order online: −{n} %",
     },
     smoothies: {
       eyebrow: "Real fruit",
@@ -180,6 +182,7 @@ export const dict = {
       legendG: "Gluteeniton",
       legendLG: "molemmat",
       legendSubs: "Subit saatavana koossa S / L",
+      discountTag: "Verkkotilaus: −{n} %",
     },
     smoothies: {
       eyebrow: "Aitoa hedelmää",
