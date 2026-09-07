@@ -14,6 +14,7 @@
  * Public API it talks to (apps/booking):
  *   GET  /api/<orderSlug>/menu           orderable menu; item ids the server prices from
  *   POST /api/<orderSlug>/order          places the order (Idempotency-Key header)
+ *   GET  /api/<orderSlug>/gift-card      balance check for a typed gift card code
  *   GET  /api/<bookSlug>/availability    real free slots for a date + party size
  *   POST /api/<bookSlug>/book            creates the booking
  *
@@ -75,6 +76,25 @@
       phone: 'Puhelin',
       optional: '(vapaaehtoinen)',
       total: 'Yhteensä',
+      /* The gift card (0066): a PAYMENT toward the total, shown under it and
+         never folded into it, with `amountDue` naming what is left to pay. */
+      giftCard: 'Lahjakortti',
+      giftCardHint: '(jos sinulla on)',
+      giftCardCheck: 'Tarkista',
+      giftCardChecking: 'Tarkistetaan…',
+      giftCardRemove: 'Poista',
+      giftCardEmpty: 'Kirjoita lahjakortin koodi.',
+      giftCardBalance: 'Saldo {amount}',
+      amountDue: 'Maksettavaa',
+      /* The refusal, by the server's structured `reason` — never its English
+         sentence. An unmapped reason gets the last one. */
+      giftCardReasons: {
+        not_found: 'Lahjakorttia ei löydy. Tarkista koodi.',
+        void: 'Lahjakortti on mitätöity.',
+        expired: 'Lahjakortti on vanhentunut.',
+        exhausted: 'Lahjakortin saldo on käytetty.',
+        other: 'Lahjakorttia ei voitu käyttää. Yritä uudelleen.'
+      },
       send: 'Lähetä tilaus',
       sending: 'Lähetetään…',
       payAtVenue: 'Maksu ravintolassa. Hinnat lasketaan palvelimella.',
@@ -156,6 +176,21 @@
       phone: 'Phone',
       optional: '(optional)',
       total: 'Total',
+      giftCard: 'Gift card',
+      giftCardHint: '(if you have one)',
+      giftCardCheck: 'Check',
+      giftCardChecking: 'Checking…',
+      giftCardRemove: 'Remove',
+      giftCardEmpty: 'Type the gift card code.',
+      giftCardBalance: 'Balance {amount}',
+      amountDue: 'Amount due',
+      giftCardReasons: {
+        not_found: "We can't find that gift card. Check the code.",
+        void: 'This gift card has been cancelled.',
+        expired: 'This gift card has expired.',
+        exhausted: 'This gift card has no balance left.',
+        other: 'The gift card could not be used. Try again.'
+      },
       send: 'Send order',
       sending: 'Sending…',
       payAtVenue: 'Pay at the restaurant. Prices are calculated on the server.',
@@ -277,6 +312,15 @@
     '.klar-total{display:flex;justify-content:space-between;align-items:baseline;',
     'margin-top:14px;font-weight:700}',
     '.klar-tv{font-size:1.25rem;font-variant-numeric:tabular-nums}',
+    /* The card and what is left: two quieter rows under the total, same
+       two-column shape, so the big number stays the order's value. */
+    '.klar-gift{display:flex;justify-content:space-between;align-items:baseline;',
+    'margin-top:6px;font-variant-numeric:tabular-nums}',
+    '.klar-gift-due{font-weight:700}',
+    '.klar-gift-row{display:flex;gap:8px}',
+    '.klar-gift-row input{flex:1 1 auto;min-width:0;text-transform:uppercase}',
+    '.klar-gift-row button{flex:0 0 auto}',
+    '.klar-gift-ok{margin:6px 0 0;font-size:.85rem;font-weight:600}',
     '.klar-slots{display:flex;flex-wrap:wrap;gap:8px;min-height:42px;align-items:center}',
     '.klar-slots button{padding:9px 14px;border:1px solid var(--klar-line);background:',
     'transparent;border-radius:var(--klar-radius);cursor:pointer;font:inherit;color:inherit}',
@@ -533,6 +577,16 @@
     var orderName = '';
     var orderPhone = '';
     var orderErr = '';
+    /* The gift card (0066). `giftCode` is what the guest typed; `giftCard` is
+       the one the venue accepted ({ code, balanceCents }) or null; `giftMsg`
+       is the line under the field and `giftOk` says whether it is a balance
+       or a refusal. The server prices the draw-down itself — the balance
+       here only previews min(balance, total). */
+    var giftCode = '';
+    var giftCard = null;
+    var giftMsg = '';
+    var giftOk = false;
+    var giftChecking = false;
     /* Kept so klar:sync can replay them to a host that mounted late. */
     var lastMenu = null;
     var lastCart = null;
@@ -665,6 +719,8 @@
           '<h3>' + esc(t.cartTitle) + '</h3><p class="klar-muted">' + esc(t.cartEmpty) + '</p>';
         return;
       }
+      /* Clamped the way the server clamps it: min(balance, total). */
+      var giftCents = giftCard ? Math.min(giftCard.balanceCents, total) : 0;
       cartWrap.innerHTML =
         '<h3>' + esc(t.cartTitle) + ' · ' + count + '</h3>' +
         cart
@@ -696,8 +752,28 @@
         esc(t.namePlaceholder) + '" value="' + esc(orderName) + '"></div>' +
         '<div class="klar-field"><label>' + esc(t.phone) + ' ' + esc(t.optional) + '</label>' +
         '<input type="tel" autocomplete="tel" data-klar="ophone" value="' + esc(orderPhone) + '"></div>' +
+        '<div class="klar-field"><label>' + esc(t.giftCard) + ' ' + esc(t.giftCardHint) + '</label>' +
+        '<div class="klar-gift-row">' +
+        '<input type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" ' +
+        'data-klar="ogift" value="' + esc(giftCode) + '"' + (giftCard ? ' disabled' : '') + '>' +
+        '<button type="button" class="klar-btn" data-klar="' +
+        (giftCard ? 'gift-remove' : 'gift-check') + '"' + (giftChecking ? ' disabled' : '') + '>' +
+        esc(giftCard ? t.giftCardRemove : giftChecking ? t.giftCardChecking : t.giftCardCheck) +
+        '</button></div>' +
+        (giftMsg
+          ? '<p class="' + (giftOk ? 'klar-gift-ok' : 'klar-err') + '">' + esc(giftMsg) + '</p>'
+          : '') +
+        '</div>' +
         '<div class="klar-total"><span class="klar-muted">' + esc(t.total) + '</span>' +
         '<span class="klar-tv">' + esc(money(total, currency)) + '</span></div>' +
+        /* A PAYMENT toward the total, so it sits under it: the total stays the
+           order's value and the last row is what the guest still hands over. */
+        (giftCents > 0
+          ? '<div class="klar-gift"><span class="klar-muted">' + esc(t.giftCard) + '</span>' +
+            '<span>−' + esc(money(giftCents, currency)) + '</span></div>' +
+            '<div class="klar-gift klar-gift-due"><span>' + esc(t.amountDue) + '</span>' +
+            '<span>' + esc(money(total - giftCents, currency)) + '</span></div>'
+          : '') +
         (orderErr ? '<p class="klar-err">' + esc(orderErr) + '</p>' : '') +
         '<button type="button" class="klar-btn klar-btn-full" data-klar="order-submit"' +
         (sending ? ' disabled' : '') + '>' + esc(sending ? t.sending : t.send) + '</button>' +
@@ -803,6 +879,21 @@
         (typeof order.totalCents === 'number'
           ? '<div class="klar-big">' + esc(money(order.totalCents, order.currency || currency)) + '</div>'
           : '') +
+        /* What the card paid and what is left, read back from the server —
+           the draw-down happened there. `amountDueCents` is the number the
+           guest hands over; it is printed big because it is the one that
+           matters at the counter. */
+        (typeof order.giftCardCents === 'number' && order.giftCardCents > 0
+          ? '<p class="klar-muted">' + esc(t.giftCard) + ' −' +
+            esc(money(order.giftCardCents, order.currency || currency)) + '</p>' +
+            '<div class="klar-big">' + esc(t.amountDue) + ' ' +
+            esc(money(
+              typeof order.amountDueCents === 'number'
+                ? order.amountDueCents
+                : Math.max(0, (order.totalCents || 0) - order.giftCardCents),
+              order.currency || currency
+            )) + '</div>'
+          : '') +
         '<p class="klar-muted">' + esc(fulfilment === 'takeaway' ? t.collect : t.table) + '</p>' +
         '<button type="button" class="klar-btn" data-klar="order-again" style="margin-top:20px">' +
         esc(t.orderAgain) + '</button>';
@@ -810,6 +901,10 @@
       orderName = '';
       orderPhone = '';
       orderErr = '';
+      giftCode = '';
+      giftCard = null;
+      giftMsg = '';
+      giftOk = false;
       checkoutKey = null;
       renderItems();
       renderCart();
@@ -817,6 +912,67 @@
         ok.hidden = true;
         el('order-live').hidden = false;
       });
+    }
+
+    function giftReasonText(reason) {
+      return t.giftCardReasons[reason] || t.giftCardReasons.other;
+    }
+
+    /* GET /api/<orderSlug>/gift-card?code=… — { valid, balanceCents } or
+       { valid: false, reason }. Only a card with a balance is kept. */
+    function checkGiftCard() {
+      if (giftChecking) return;
+      var code = giftCode.trim();
+      if (!code) {
+        giftOk = false;
+        giftMsg = t.giftCardEmpty;
+        renderCart();
+        return;
+      }
+      giftChecking = true;
+      giftMsg = '';
+      renderCart();
+      win
+        .fetch(
+          cfg.api + '/api/' + encodeURIComponent(cfg.orderSlug) + '/gift-card?code=' +
+            encodeURIComponent(code),
+          { headers: { Accept: 'application/json' } }
+        )
+        .then(readJson)
+        .then(function (result) {
+          giftChecking = false;
+          var body = result.body || {};
+          if (result.ok && body.valid === true && typeof body.balanceCents === 'number' && body.balanceCents > 0) {
+            giftCard = { code: code, balanceCents: body.balanceCents };
+            giftOk = true;
+            giftMsg = t.giftCardBalance.replace('{amount}', money(body.balanceCents, body.currency || currency));
+          } else {
+            if (!result.ok) warn('gift card lookup refused for "' + cfg.orderSlug + '" (' + result.status + ').', body);
+            giftCard = null;
+            giftOk = false;
+            giftMsg = giftReasonText(body.reason);
+          }
+          /* A different card is a different order for the Idempotency-Key. */
+          cartChanged();
+          renderCart();
+        })
+        .catch(function (error) {
+          giftChecking = false;
+          giftCard = null;
+          giftOk = false;
+          warn('gift card lookup failed for "' + cfg.orderSlug + '".', error);
+          giftMsg = t.generic;
+          renderCart();
+        });
+    }
+
+    function removeGiftCard() {
+      giftCode = '';
+      giftCard = null;
+      giftMsg = '';
+      giftOk = false;
+      cartChanged();
+      renderCart();
     }
 
     function placeOrder() {
@@ -840,7 +996,9 @@
             fulfilmentType: fulfilment,
             items: cart.map(function (line) {
               return { menuItemId: line.id, qty: line.qty };
-            })
+            }),
+            /* Only a card the lookup accepted; the server re-checks it. */
+            giftCardCode: giftCard ? giftCard.code : undefined
           })
         })
         .then(readJson)
@@ -848,6 +1006,22 @@
           sending = false;
           if (!result.ok) {
             warn('order rejected for "' + cfg.orderSlug + '" (' + result.status + ').', result.body);
+            /* The card the lookup accepted was refused at the write — voided,
+               drained or lost a race in between. Dropped, so the rows stop
+               promising a payment the venue will not honour, and the reason
+               is said beside the field in the embed's own language. */
+            if (
+              result.body &&
+              (result.body.code === 'GIFT_CARD_INVALID' || result.body.error === 'GIFT_CARD_INVALID')
+            ) {
+              giftCard = null;
+              giftOk = false;
+              giftMsg = giftReasonText(result.body.reason);
+              orderErr = giftMsg;
+              cartChanged();
+              renderCart();
+              return;
+            }
             /* The kitchen shut between loading the menu and pressing send —
                the guest sat on the page past the last order time, or the venue
                closed the day underneath them. The refusal carries the same
@@ -976,6 +1150,14 @@
           renderCart();
           return;
         }
+        if (event.target.closest('[data-klar="gift-check"]')) {
+          checkGiftCard();
+          return;
+        }
+        if (event.target.closest('[data-klar="gift-remove"]')) {
+          removeGiftCard();
+          return;
+        }
         if (event.target.closest('[data-klar="order-submit"]')) placeOrder();
       });
 
@@ -983,6 +1165,17 @@
         var field = event.target.dataset ? event.target.dataset.klar : null;
         if (field === 'oname') orderName = event.target.value;
         if (field === 'ophone') orderPhone = event.target.value;
+        if (field === 'ogift') giftCode = event.target.value;
+      });
+
+      /* Enter in the code field checks the card; it must never send the order
+         with a code nobody has looked at. */
+      cartWrap.addEventListener('keydown', function (event) {
+        var field = event.target.dataset ? event.target.dataset.klar : null;
+        if (field === 'ogift' && event.key === 'Enter') {
+          event.preventDefault();
+          if (!giftCard) checkGiftCard();
+        }
       });
 
       renderCart();
