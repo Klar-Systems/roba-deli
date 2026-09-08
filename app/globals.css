@@ -422,7 +422,3 @@ select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{
   .legal-company dl{grid-template-columns:1fr;gap:2px}
   .legal-company dd{margin-bottom:12px}
 }
-
-/* The one added footer line. Inherits .cc, so it matches the row above it. */
-.cc-legal{margin-top:6px;opacity:.72}
-.cc-legal a{text-decoration:underline}
