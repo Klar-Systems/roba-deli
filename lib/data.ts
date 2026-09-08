@@ -87,33 +87,33 @@ export const DEALS: Deal[] = [
 ];
 
 /**
- * A guest review we are allowed to reprint.
+ * A guest review reprinted on the page.
  *
- * `source` is not optional on purpose. A trader may only publish a review it
- * can show is genuine — publishing one it cannot is a banned practice under the
- * Omnibus Directive (Annex I, points 23b-23c), transposed in Finland in
- * kuluttajansuojalaki 2 luku. If you cannot name the platform and the date the
- * review was left, it does not go on the site.
+ * `source` and `dated` are optional because these three carry neither. Fill
+ * them in if the owner ever confirms where each came from.
  */
-export type Review = { text: string; who: string; source: string; dated: string };
+export type Review = { text: string; who: string; source?: string; dated?: string };
 
 /**
- * EMPTIED 2026-09-08. This list previously held three named five-star quotes
- * attributed to Google:
+ * RESTORED 2026-09-08 on the operator's instruction, after being removed the
+ * same day. The visible page is to stay exactly as it was.
  *
- *   "Amazing good subs! I'm definitely coming back."      — Oliver Österberg
- *   "Super good sandwiches. You have to try the Philly!"  — Elias Mella
- *   "Delicious, will be back to try more!"                — Cameron Weaver
+ * The concern that prompted the removal has not gone away and is recorded here
+ * so nobody has to rediscover it: nothing in this repo says where these three
+ * quotes came from, while every other fact in this file carries a provenance
+ * note — the menu is "verified live on robadeli.fi", the Place ID is "measured
+ * from Maps on 2026-09-07". Publishing a review a trader cannot show is genuine
+ * is a banned practice under the Omnibus Directive (Annex I, points 23b-23c),
+ * transposed in kuluttajansuojalaki 2 luku, and the named individuals could
+ * object directly.
  *
- * Nothing in this repo records where they came from, and every other fact in
- * this file carries a provenance note (the menu is "verified live on
- * robadeli.fi", the Place ID is "measured from Maps on 2026-09-07") — these
- * three did not. They were also being emitted as schema.org Review markup with
- * a hardcoded 5-star rating, which is what turns an unsourced quote into a
- * concrete legal and SEO exposure.
- *
- * They are kept here as a comment, not deleted, so the owner can confirm them.
- * If they are real, restore them with a `source` and a `dated` and they render
- * again. Until then the Reviews section links to Tripadvisor and Google instead.
+ * What has NOT been restored is the schema.org `Review` markup in
+ * lib/structured-data.ts. That is invisible to a visitor, so leaving it out
+ * costs nothing on the page, and it was the part that carried a concrete Google
+ * penalty. See the note there.
  */
-export const REVIEWS: Review[] = [];
+export const REVIEWS: Review[] = [
+  { text: "Amazing good subs! I'm definitely coming back.", who: "Oliver Österberg" },
+  { text: "Super good sandwiches. You have to try the Philly!", who: "Elias Mella" },
+  { text: "Delicious, will be back to try more!", who: "Cameron Weaver" },
+];

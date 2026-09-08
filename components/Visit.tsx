@@ -1,4 +1,3 @@
-import MapCard from "@/components/MapCard";
 import { dict, type Locale } from "@/lib/i18n";
 
 export default function Visit({ locale }: { locale: Locale }) {
@@ -60,7 +59,24 @@ export default function Visit({ locale }: { locale: Locale }) {
             <a className="btn btn-solid" href="tel:+358503797490">{t.cta}</a>
           </div>
         </div>
-        <MapCard locale={locale} />
+        {/*
+          Reverted 2026-09-08: the map loads with the page again, as it did
+          before. components/MapCard.tsx (click-to-load) stays in the repo
+          unused, so putting it back is a one-line change.
+
+          What that means: Google sets its own cookies as soon as this iframe
+          loads, before the visitor has agreed to anything. Those are not
+          strictly necessary for anything the visitor asked for, which is the
+          test in 205 § of the Act on Electronic Communications Services.
+        */}
+        <div className="map-card reveal">
+          <iframe
+            title="Roba Deli location"
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            src="https://www.google.com/maps?q=Roba%20Deli,%20Iso%20Roobertinkatu%201,%2000120%20Helsinki&z=16&output=embed"
+          ></iframe>
+        </div>
       </div>
     </section>
   );
