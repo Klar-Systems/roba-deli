@@ -1,0 +1,9 @@
+{
+  "branch": "main",
+  "target": "origin/main",
+  "head": "4b4d9d80188a0556f2861912f064e671a72e9f0a",
+  "target_head": "bb9fa35dcf0666cacbc573d2c4de300eee653a59",
+  "verdict": "GO",
+  "checks": { "deletion_scan": "pass", "staleness": "pass", "disjointness": "pass", "fast_forward": "possible", "tests": "skipped (no command configured)", "clean_index": "pass", "link_integrity": "pass", "follow_up": "printed" },
+  "written_at": "2026-09-01T10:08:51Z"
+}

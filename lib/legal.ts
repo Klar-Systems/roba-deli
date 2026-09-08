@@ -21,21 +21,44 @@
 /** A fact only the business owner can supply. Rendered so it cannot be missed. */
 export const TODO = (what: string) => `{{TODO: ${what}}}`;
 
+/**
+ * Measured 2026-09-08 from two public registers, not supplied by anyone:
+ *
+ *   Oiva (oivahymy.fi, the food-control register) — "Roba Deli",
+ *   Iso Roobertinkatu 1, 00120 Helsinki, food business operator "SubHub Oy",
+ *   category "Kahvilat ja ravintolat". The shop address matches this site.
+ *
+ *   PRH/YTJ (avoindata.prh.fi) — SubHub Oy, Y-tunnus 3611281-3, registered
+ *   address Pajuniityntie 3, 00320 Helsinki, line of business "Pikaruoka-
+ *   ravintolat ja ruokakioskit", in the VAT register since 2026-03-22.
+ *
+ * SubHub Oy is also the counterparty on the signed Roba Deli ordering
+ * agreement, which is the independent corroboration.
+ *
+ * Note the two addresses are different and both belong here: the CONTROLLER is
+ * the company at its registered address; the SHOP is where the guest goes.
+ */
 export const COMPANY = {
   /** Trading name — measured from the site and the owner's own channels. */
   tradingName: "Roba Deli",
-  /** Registered company name. NOT the trading name; the owner must supply it. */
-  legalName: TODO("registered company name (kaupparekisterin toiminimi)"),
+  /** Registered company name (PRH, 2026-09-08). */
+  legalName: "SubHub Oy",
   /** Finnish business ID. Required before a consumer places an order. */
-  businessId: TODO("Y-tunnus"),
-  /** content/contact.md — confirmed with the owner. */
-  address: "Iso Roobertinkatu 1, 00120 Helsinki, Finland",
+  businessId: "3611281-3",
+  /** The company's registered address — the controller's address. */
+  address: "Pajuniityntie 3, 00320 Helsinki, Finland",
+  /** The shop itself. content/contact.md, confirmed with the owner. */
+  shopAddress: "Iso Roobertinkatu 1, 00120 Helsinki, Finland",
   phone: "+358 50 379 7490",
   phoneDisplay: "050 379 7490",
-  /** No email address appears anywhere in this repo. */
+  /**
+   * Still open. No email address appears in this repo, on the site, or in
+   * either public register — the registers do not carry one. The owner has to
+   * give it, and consumer law wants a contact channel that is not only a phone.
+   */
   email: TODO("customer-contact email address"),
-  /** Set once the shop is VAT-registered and the number is known. */
-  vat: TODO("ALV-numero / VAT number"),
+  /** FI + the business ID without its dash; VAT-registered since 2026-03-22. */
+  vat: "FI36112813",
 } as const;
 
 export type LegalSection = { h: string; p: string[] };
@@ -64,7 +87,7 @@ const privacyEn: LegalDocument = {
     {
       h: "Who is responsible for your data",
       p: [
-        `The controller is ${C.legalName} (trading as ${C.tradingName}), business ID ${C.businessId}, ${C.address}.`,
+        `The controller is ${C.legalName} (trading as ${C.tradingName}), business ID ${C.businessId}, registered at ${C.address}. The shop itself is at ${C.shopAddress}.`,
         `Questions about your data: ${C.email} or ${C.phoneDisplay}.`,
       ],
     },
@@ -181,7 +204,7 @@ const termsEn: LegalDocument = {
     {
       h: "Who you are dealing with",
       p: [
-        `Your contract is with ${C.legalName} (trading as ${C.tradingName}), business ID ${C.businessId}, ${C.address}, ${C.phoneDisplay}, ${C.email}.`,
+        `Your contract is with ${C.legalName} (trading as ${C.tradingName}), business ID ${C.businessId}, VAT ${C.vat}, registered at ${C.address}, trading at ${C.shopAddress}. Phone ${C.phoneDisplay}, email ${C.email}.`,
       ],
     },
     {
@@ -304,7 +327,7 @@ const privacyFi: LegalDocument = {
     {
       h: "Rekisterinpitäjä",
       p: [
-        `Rekisterinpitäjä on ${C.legalName} (aputoiminimi ${C.tradingName}), Y-tunnus ${C.businessId}, ${C.address}.`,
+        `Rekisterinpitäjä on ${C.legalName} (markkinointinimi ${C.tradingName}), Y-tunnus ${C.businessId}, rekisteröity osoite ${C.address}. Toimipaikka on ${C.shopAddress}.`,
         `Tietojasi koskevat kysymykset: ${C.email} tai ${C.phoneDisplay}.`,
       ],
     },
@@ -419,7 +442,7 @@ const termsFi: LegalDocument = {
     {
       h: "Kenen kanssa asioit",
       p: [
-        `Sopimuksesi on ${C.legalName} (aputoiminimi ${C.tradingName}), Y-tunnus ${C.businessId}, ${C.address}, ${C.phoneDisplay}, ${C.email}.`,
+        `Sopimuksesi on ${C.legalName} (markkinointinimi ${C.tradingName}), Y-tunnus ${C.businessId}, ALV-numero ${C.vat}, rekisteröity osoite ${C.address}, toimipaikka ${C.shopAddress}. Puhelin ${C.phoneDisplay}, sähköposti ${C.email}.`,
       ],
     },
     {

@@ -60,8 +60,10 @@ export default function LegalDoc({
             <dd>{COMPANY.businessId}</dd>
             <dt>{locale === "fi" ? "ALV-numero" : "VAT number"}</dt>
             <dd>{COMPANY.vat}</dd>
-            <dt>{locale === "fi" ? "Osoite" : "Address"}</dt>
+            <dt>{locale === "fi" ? "Rekisteröity osoite" : "Registered address"}</dt>
             <dd>{COMPANY.address}</dd>
+            <dt>{locale === "fi" ? "Toimipaikka" : "Shop"}</dt>
+            <dd>{COMPANY.shopAddress}</dd>
             <dt>{locale === "fi" ? "Puhelin" : "Phone"}</dt>
             <dd>
               <a href={`tel:${COMPANY.phone.replace(/\s/g, "")}`}>{COMPANY.phoneDisplay}</a>
