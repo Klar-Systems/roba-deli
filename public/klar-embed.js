@@ -583,6 +583,10 @@
        or a refusal. The server prices the draw-down itself — the balance
        here only previews min(balance, total). */
     var giftCode = '';
+    /* Off until `GET /menu` says this venue sells gift cards (0068's switch,
+       default false). A field offered by a venue that has none can only ever
+       answer "not found", so it is not rendered at all. */
+    var giftCardsOn = false;
     var giftCard = null;
     var giftMsg = '';
     var giftOk = false;
@@ -752,18 +756,20 @@
         esc(t.namePlaceholder) + '" value="' + esc(orderName) + '"></div>' +
         '<div class="klar-field"><label>' + esc(t.phone) + ' ' + esc(t.optional) + '</label>' +
         '<input type="tel" autocomplete="tel" data-klar="ophone" value="' + esc(orderPhone) + '"></div>' +
-        '<div class="klar-field"><label>' + esc(t.giftCard) + ' ' + esc(t.giftCardHint) + '</label>' +
-        '<div class="klar-gift-row">' +
-        '<input type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" ' +
-        'data-klar="ogift" value="' + esc(giftCode) + '"' + (giftCard ? ' disabled' : '') + '>' +
-        '<button type="button" class="klar-btn" data-klar="' +
-        (giftCard ? 'gift-remove' : 'gift-check') + '"' + (giftChecking ? ' disabled' : '') + '>' +
-        esc(giftCard ? t.giftCardRemove : giftChecking ? t.giftCardChecking : t.giftCardCheck) +
-        '</button></div>' +
-        (giftMsg
-          ? '<p class="' + (giftOk ? 'klar-gift-ok' : 'klar-err') + '">' + esc(giftMsg) + '</p>'
+        (giftCardsOn
+          ? '<div class="klar-field"><label>' + esc(t.giftCard) + ' ' + esc(t.giftCardHint) + '</label>' +
+            '<div class="klar-gift-row">' +
+            '<input type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" ' +
+            'data-klar="ogift" value="' + esc(giftCode) + '"' + (giftCard ? ' disabled' : '') + '>' +
+            '<button type="button" class="klar-btn" data-klar="' +
+            (giftCard ? 'gift-remove' : 'gift-check') + '"' + (giftChecking ? ' disabled' : '') + '>' +
+            esc(giftCard ? t.giftCardRemove : giftChecking ? t.giftCardChecking : t.giftCardCheck) +
+            '</button></div>' +
+            (giftMsg
+              ? '<p class="' + (giftOk ? 'klar-gift-ok' : 'klar-err') + '">' + esc(giftMsg) + '</p>'
+              : '') +
+            '</div>'
           : '') +
-        '</div>' +
         '<div class="klar-total"><span class="klar-muted">' + esc(t.total) + '</span>' +
         '<span class="klar-tv">' + esc(money(total, currency)) + '</span></div>' +
         /* A PAYMENT toward the total, so it sits under it: the total stays the
@@ -792,6 +798,10 @@
       });
       allowsEatIn = data.client ? data.client.allowsEatIn !== false : true;
       if (!allowsEatIn) fulfilment = 'takeaway';
+      /* Opt-in, unlike eat-in: a venue that has never sold a gift card must not
+         be made to look as if it does. An older API that does not publish the
+         flag at all therefore hides the field too. */
+      giftCardsOn = !!(data.client && data.client.giftCardsEnabled === true);
       var first = categories[0] && categories[0].items[0];
       if (first && first.currency) currency = first.currency;
       if (categories.length === 0) {
