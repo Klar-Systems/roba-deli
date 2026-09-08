@@ -342,57 +342,7 @@ nav.main .langswitch i{color:var(--line);font-style:normal}
   html{scroll-behavior:auto}
 }
 
-/* ============================================================
-   ACCESSIBILITY + LEGAL PAGES              added 2026-09-08
-   ============================================================ */
-
-/* Skip link — first thing in the tab order, off-screen until focused. */
-.skip-link{position:absolute;left:-9999px;top:0;z-index:1000;
-  background:var(--gold);color:var(--ink);font-family:var(--font-montserrat);
-  font-weight:700;padding:14px 22px;border-radius:0 0 4px 0}
-.skip-link:focus{left:0}
-
-/* A visible focus ring everywhere. The site had none, so a keyboard user could
-   not tell where they were. `:focus-visible` keeps it off for mouse clicks. */
-a:focus-visible,button:focus-visible,input:focus-visible,
-select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{
-  outline:3px solid var(--gold-2);outline-offset:3px;border-radius:2px}
-
-/* The order panel used `outline:none` on focus with only a border colour change,
-   which is invisible to anyone who cannot see the colour shift. */
-.order-panel .klar-field input:focus-visible{
-  outline:3px solid var(--gold-2);outline-offset:2px}
-
-/* Respect a reduced-motion preference: the reveal animation hides content until
-   it fires, so it must not be the only way content becomes visible. */
-@media (prefers-reduced-motion:reduce){
-  html{scroll-behavior:auto}
-  .reveal{opacity:1;transform:none;transition:none}
-  *{animation-duration:.01ms!important;animation-iteration-count:1!important;
-    transition-duration:.01ms!important}
-}
-
-/* Reviews — the link-out panel that replaced the unsourced testimonials. */
-.rev-links{margin-top:30px;text-align:center}
-.rev-links p{color:var(--muted);font-size:15px;max-width:56ch;margin:0 auto 18px}
-.rev-links a{display:inline-block;margin:6px 10px;padding:12px 22px;
-  border:1px solid var(--line);color:var(--gold);font-family:var(--font-montserrat);
-  font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;transition:.3s var(--ease)}
-.rev-links a:hover{border-color:var(--gold);background:var(--ink-3)}
-
-/* Click-to-load map placeholder. */
-.map-card--off{display:flex;align-items:center;justify-content:center;
-  background:var(--ink-3);border:1px solid var(--line);min-height:320px}
-.map-ask{padding:34px 28px;text-align:center;max-width:46ch}
-.map-ask h3{font-size:19px;color:var(--white);margin:0 0 10px}
-.map-ask p{color:var(--muted);font-size:14.5px;margin:0 0 18px}
-.map-ask .map-note{font-size:12.5px;margin:16px 0 10px}
-.map-ask a{color:var(--gold);text-decoration:underline;font-size:13.5px}
-
-/* Footer legal row + the business-details block. */
-.fl-legal{margin-top:10px}
-.fl-legal a{text-decoration:underline}
-.f address.cc{font-style:normal;line-height:1.9}
+/* Legal-page styling only. These selectors appear on no other page. */
 
 /* ── Legal pages ── */
 .legal{background:var(--ink);min-height:100vh}

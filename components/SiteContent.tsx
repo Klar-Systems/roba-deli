@@ -18,7 +18,7 @@ export default function SiteContent({ locale }: { locale: Locale }) {
     <>
       <TopBar locale={locale} />
       <Nav locale={locale} />
-      <main id="main">
+      <main>
         <Hero locale={locale} />
         <About locale={locale} />
         <Deals locale={locale} />

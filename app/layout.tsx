@@ -87,13 +87,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${montserrat.variable} ${inter.variable}`}>
       <body>
-        {/*
-          Keyboard and screen-reader users land on this first and can jump the
-          whole nav in one press. It is off-screen until focused (app/globals.css).
-        */}
-        <a href="#main" className="skip-link">
-          Skip to content
-        </a>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(restaurantJsonLd) }}
