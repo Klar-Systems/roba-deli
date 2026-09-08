@@ -86,9 +86,34 @@ export const DEALS: Deal[] = [
   { k: "Duo deal", kFi: "Duo-tarjous", price: "€23.99", d: "Two L subs", dFi: "Kaksi L-subia", note: "Excl. Pastrami Burger", noteFi: "Pl. Pastrami Burger" },
 ];
 
-export type Review = { text: string; who: string };
-export const REVIEWS: Review[] = [
-  { text: "Amazing good subs! I'm definitely coming back.", who: "Oliver Österberg" },
-  { text: "Super good sandwiches. You have to try the Philly!", who: "Elias Mella" },
-  { text: "Delicious, will be back to try more!", who: "Cameron Weaver" },
-];
+/**
+ * A guest review we are allowed to reprint.
+ *
+ * `source` is not optional on purpose. A trader may only publish a review it
+ * can show is genuine — publishing one it cannot is a banned practice under the
+ * Omnibus Directive (Annex I, points 23b-23c), transposed in Finland in
+ * kuluttajansuojalaki 2 luku. If you cannot name the platform and the date the
+ * review was left, it does not go on the site.
+ */
+export type Review = { text: string; who: string; source: string; dated: string };
+
+/**
+ * EMPTIED 2026-09-08. This list previously held three named five-star quotes
+ * attributed to Google:
+ *
+ *   "Amazing good subs! I'm definitely coming back."      — Oliver Österberg
+ *   "Super good sandwiches. You have to try the Philly!"  — Elias Mella
+ *   "Delicious, will be back to try more!"                — Cameron Weaver
+ *
+ * Nothing in this repo records where they came from, and every other fact in
+ * this file carries a provenance note (the menu is "verified live on
+ * robadeli.fi", the Place ID is "measured from Maps on 2026-09-07") — these
+ * three did not. They were also being emitted as schema.org Review markup with
+ * a hardcoded 5-star rating, which is what turns an unsourced quote into a
+ * concrete legal and SEO exposure.
+ *
+ * They are kept here as a comment, not deleted, so the owner can confirm them.
+ * If they are real, restore them with a `source` and a `dated` and they render
+ * again. Until then the Reviews section links to Tripadvisor and Google instead.
+ */
+export const REVIEWS: Review[] = [];

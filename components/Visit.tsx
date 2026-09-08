@@ -1,3 +1,4 @@
+import MapCard from "@/components/MapCard";
 import { dict, type Locale } from "@/lib/i18n";
 
 export default function Visit({ locale }: { locale: Locale }) {
@@ -59,14 +60,7 @@ export default function Visit({ locale }: { locale: Locale }) {
             <a className="btn btn-solid" href="tel:+358503797490">{t.cta}</a>
           </div>
         </div>
-        <div className="map-card reveal">
-          <iframe
-            title="Roba Deli location"
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            src="https://www.google.com/maps?q=Roba%20Deli,%20Iso%20Roobertinkatu%201,%2000120%20Helsinki&z=16&output=embed"
-          ></iframe>
-        </div>
+        <MapCard locale={locale} />
       </div>
     </section>
   );
