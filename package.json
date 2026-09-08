@@ -5,7 +5,8 @@
   "description": "Roba Deli — premium sandwich-deli website (Next.js + TypeScript + Tailwind).",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "check:legal": "node scripts/check-legal.mjs",
+    "build": "npm run check:legal && next build",
     "start": "next start",
     "lint": "next lint"
   },

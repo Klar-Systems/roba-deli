@@ -14,12 +14,11 @@
  * If any of those change, this file changes with them. A privacy policy that
  * describes a different site is worse than none.
  *
- * TODO markers are deliberate and must be visible: a company number or a legal
- * entity name is a fact the operator supplies, never one this file invents.
+ * A fact this file does not know is `null`, never an invented value and never a
+ * placeholder string. Sentences fall back to what IS known, and
+ * `npm run check:legal` fails the build so the gap is loud for us rather than
+ * printed to a guest.
  */
-
-/** A fact only the business owner can supply. Rendered so it cannot be missed. */
-export const TODO = (what: string) => `{{TODO: ${what}}}`;
 
 /**
  * Measured 2026-09-08 from two public registers, not supplied by anyone:
@@ -52,11 +51,16 @@ export const COMPANY = {
   phone: "+358 50 379 7490",
   phoneDisplay: "050 379 7490",
   /**
-   * Still open. No email address appears in this repo, on the site, or in
-   * either public register — the registers do not carry one. The owner has to
-   * give it, and consumer law wants a contact channel that is not only a phone.
+   * NULL, not a placeholder.
+   *
+   * No email address appears in this repo, on robadeli.fi, or in the trade or
+   * food-control registers — the registers do not carry one. Rather than print
+   * a {{TODO}} marker to a customer, every sentence that would have used an
+   * email falls back to the phone number, and `npm run check:legal` fails the
+   * build until the owner supplies one. The gap stays loud for us and invisible
+   * to the guest.
    */
-  email: TODO("customer-contact email address"),
+  email: null as string | null,
   /** FI + the business ID without its dash; VAT-registered since 2026-03-22. */
   vat: "FI36112813",
 } as const;
@@ -75,6 +79,10 @@ const UPDATED_FI = "8. syyskuuta 2026";
 
 const C = COMPANY;
 
+/** How to reach the business, using the email only if there is one. */
+const CONTACT_EN = C.email ? `${C.email} or ${C.phoneDisplay}` : C.phoneDisplay;
+const CONTACT_FI = C.email ? `${C.email} tai ${C.phoneDisplay}` : C.phoneDisplay;
+
 /* ─────────────────────────── English ─────────────────────────── */
 
 const privacyEn: LegalDocument = {
@@ -88,7 +96,7 @@ const privacyEn: LegalDocument = {
       h: "Who is responsible for your data",
       p: [
         `The controller is ${C.legalName} (trading as ${C.tradingName}), business ID ${C.businessId}, registered at ${C.address}. The shop itself is at ${C.shopAddress}.`,
-        `Questions about your data: ${C.email} or ${C.phoneDisplay}.`,
+        `Questions about your data: ${CONTACT_EN}.`,
       ],
     },
     {
@@ -137,7 +145,7 @@ const privacyEn: LegalDocument = {
       h: "Your rights",
       p: [
         "You can ask us for a copy of the data we hold about you, ask us to correct it, ask us to delete it, ask us to restrict how we use it, object to processing we base on legitimate interest, and ask for the data you gave us in a portable form. Where we rely on your consent, you can withdraw it at any time without affecting what we did before you withdrew it.",
-        `Write to ${C.email} and we will answer within one month.`,
+        `Contact us on ${CONTACT_EN} and we will answer within one month.`,
         "If you think we have handled your data wrongly, you can complain to the Finnish Data Protection Ombudsman: Tietosuojavaltuutetun toimisto, tietosuoja.fi. You can complain to them without asking us first.",
       ],
     },
@@ -204,7 +212,7 @@ const termsEn: LegalDocument = {
     {
       h: "Who you are dealing with",
       p: [
-        `Your contract is with ${C.legalName} (trading as ${C.tradingName}), business ID ${C.businessId}, VAT ${C.vat}, registered at ${C.address}, trading at ${C.shopAddress}. Phone ${C.phoneDisplay}, email ${C.email}.`,
+        `Your contract is with ${C.legalName} (trading as ${C.tradingName}), business ID ${C.businessId}, VAT ${C.vat}, registered at ${C.address}, trading at ${C.shopAddress}. Contact: ${CONTACT_EN}.`,
       ],
     },
     {
@@ -244,7 +252,7 @@ const termsEn: LegalDocument = {
     {
       h: "If something is wrong",
       p: [
-        `Contact us as soon as you can — ${C.phoneDisplay} or ${C.email} — and keep the order if you still have it. If we got the order wrong, we will remake it or refund it. See our refunds page for the detail.`,
+        `Contact us as soon as you can — ${CONTACT_EN} — and keep the order if you still have it. If we got the order wrong, we will remake it or refund it. See our refunds page for the detail.`,
       ],
     },
     {
@@ -297,7 +305,7 @@ const refundsEn: LegalDocument = {
     {
       h: "How to ask",
       p: [
-        `Tell us the same day if you can: ${C.phoneDisplay}, or ${C.email} with your order number. A photo helps if something arrived wrong or damaged. We answer within a few days and will not make you chase us.`,
+        `Tell us the same day if you can: ${CONTACT_EN}, with your order number. A photo helps if something arrived wrong or damaged. We answer within a few days and will not make you chase us.`,
       ],
     },
     {
@@ -328,7 +336,7 @@ const privacyFi: LegalDocument = {
       h: "Rekisterinpitäjä",
       p: [
         `Rekisterinpitäjä on ${C.legalName} (markkinointinimi ${C.tradingName}), Y-tunnus ${C.businessId}, rekisteröity osoite ${C.address}. Toimipaikka on ${C.shopAddress}.`,
-        `Tietojasi koskevat kysymykset: ${C.email} tai ${C.phoneDisplay}.`,
+        `Tietojasi koskevat kysymykset: ${CONTACT_FI}.`,
       ],
     },
     {
@@ -377,7 +385,7 @@ const privacyFi: LegalDocument = {
       h: "Oikeutesi",
       p: [
         "Voit pyytää jäljennöksen sinusta tallennetuista tiedoista, pyytää niiden oikaisua tai poistoa, pyytää käsittelyn rajoittamista, vastustaa oikeutettuun etuun perustuvaa käsittelyä, ja pyytää antamasi tiedot siirrettävässä muodossa. Jos käsittely perustuu suostumukseesi, voit peruuttaa sen milloin tahansa; peruutus ei vaikuta sitä ennen tehtyyn käsittelyyn.",
-        `Ota yhteyttä osoitteeseen ${C.email}, niin vastaamme kuukauden kuluessa.`,
+        `Ota yhteyttä: ${CONTACT_FI}. Vastaamme kuukauden kuluessa.`,
         "Jos katsot, että olemme käsitelleet tietojasi väärin, voit tehdä valituksen tietosuojavaltuutetulle: Tietosuojavaltuutetun toimisto, tietosuoja.fi. Voit tehdä valituksen kysymättä ensin meiltä.",
       ],
     },
@@ -442,7 +450,7 @@ const termsFi: LegalDocument = {
     {
       h: "Kenen kanssa asioit",
       p: [
-        `Sopimuksesi on ${C.legalName} (markkinointinimi ${C.tradingName}), Y-tunnus ${C.businessId}, ALV-numero ${C.vat}, rekisteröity osoite ${C.address}, toimipaikka ${C.shopAddress}. Puhelin ${C.phoneDisplay}, sähköposti ${C.email}.`,
+        `Sopimuksesi on ${C.legalName} (markkinointinimi ${C.tradingName}), Y-tunnus ${C.businessId}, ALV-numero ${C.vat}, rekisteröity osoite ${C.address}, toimipaikka ${C.shopAddress}. Yhteystiedot: ${CONTACT_FI}.`,
       ],
     },
     {
@@ -482,7 +490,7 @@ const termsFi: LegalDocument = {
     {
       h: "Jos jokin on pielessä",
       p: [
-        `Ota yhteyttä mahdollisimman pian — ${C.phoneDisplay} tai ${C.email} — ja säilytä tilaus jos se on vielä tallella. Jos teimme tilauksen väärin, valmistamme sen uudelleen tai palautamme rahat. Yksityiskohdat ovat palautussivulla.`,
+        `Ota yhteyttä mahdollisimman pian — ${CONTACT_FI} — ja säilytä tilaus jos se on vielä tallella. Jos teimme tilauksen väärin, valmistamme sen uudelleen tai palautamme rahat. Yksityiskohdat ovat palautussivulla.`,
       ],
     },
     {
@@ -535,7 +543,7 @@ const refundsFi: LegalDocument = {
     {
       h: "Miten pyydät",
       p: [
-        `Kerro mieluiten samana päivänä: ${C.phoneDisplay}, tai ${C.email} ja tilausnumerosi. Valokuva auttaa jos jokin saapui väärin tai vaurioituneena. Vastaamme muutamassa päivässä emmekä pane sinua perääntymään asiaa.`,
+        `Kerro mieluiten samana päivänä: ${CONTACT_FI}, ja tilausnumerosi. Valokuva auttaa jos jokin saapui väärin tai vaurioituneena. Vastaamme muutamassa päivässä emmekä pane sinua perääntymään asiaa.`,
       ],
     },
     {

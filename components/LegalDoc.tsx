@@ -68,8 +68,15 @@ export default function LegalDoc({
             <dd>
               <a href={`tel:${COMPANY.phone.replace(/\s/g, "")}`}>{COMPANY.phoneDisplay}</a>
             </dd>
-            <dt>{locale === "fi" ? "Sähköposti" : "Email"}</dt>
-            <dd>{COMPANY.email}</dd>
+            {/* Omitted entirely while unknown, rather than shown as a placeholder. */}
+            {COMPANY.email && (
+              <>
+                <dt>{locale === "fi" ? "Sähköposti" : "Email"}</dt>
+                <dd>
+                  <a href={`mailto:${COMPANY.email}`}>{COMPANY.email}</a>
+                </dd>
+              </>
+            )}
           </dl>
         </section>
 
