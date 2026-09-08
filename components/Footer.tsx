@@ -1,4 +1,7 @@
+import Link from "next/link";
+
 import { dict, type Locale } from "@/lib/i18n";
+import { COMPANY, LEGAL_LINKS } from "@/lib/legal";
 
 /**
  * Reverted 2026-09-08 to its pre-legal-pass appearance on the operator's
@@ -46,6 +49,24 @@ export default function Footer({ locale }: { locale: Locale }) {
       </div>
       <div className="cc">
         Iso Roobertinkatu 1, 00120 Helsinki · <a href="tel:+358503797490">050 379 7490</a> · © Roba Deli
+      </div>
+
+      {/*
+        One extra line, in the footer's existing style and type size. This is
+        the minimum a trader has to publish before a consumer orders: who they
+        are, the Y-tunnus, and a route to the terms and the privacy statement
+        (kuluttajansuojalaki 6:9, GDPR Art 13). SubHub Oy / 3611281-3 come from
+        PRH and the food-control register, measured 2026-09-08. Nothing above
+        this line moved.
+      */}
+      <div className="cc cc-legal">
+        {COMPANY.legalName} · {locale === "fi" ? "Y-tunnus" : "Business ID"} {COMPANY.businessId} ·{" "}
+        {LEGAL_LINKS[locale].map((link, i) => (
+          <span key={link.href}>
+            {i > 0 && " · "}
+            <Link href={link.href}>{link.label}</Link>
+          </span>
+        ))}
       </div>
     </footer>
   );
