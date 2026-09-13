@@ -182,9 +182,15 @@
       depositFailed:
         'Maksua ei voitu vahvistaa. Jos rahat lähtivät tililtäsi, ne palautetaan.',
       bookOk: 'Pöytä varattu',
-      bookConfirm: 'Vahvistus lähetettiin sähköpostiisi.',
+      bookConfirm: 'Vahvistus lähetettiin osoitteeseen {email}. Jos se ei näy, tarkista roskapostikansio.',
       bookAgain: 'Tee uusi varaus',
       bookFields: 'Täytä päivä, kellonaika, nimi, puhelin ja sähköposti.',
+      needDate: 'Valitse päivä.',
+      needTime: 'Valitse kellonaika.',
+      needName: 'Kirjoita nimesi.',
+      needPhone: 'Kirjoita puhelinnumerosi.',
+      needEmail: 'Kirjoita sähköpostiosoitteesi.',
+      slotGone: 'Klo {time} ei ole enää vapaana tälle päivälle ja seurueelle. Valitse toinen aika.',
       at: 'klo',
       generic: 'Yhteys ei onnistunut. Yritä hetken päästä uudelleen.',
       callUs: 'Soita',
@@ -292,9 +298,15 @@
       depositFailed:
         'The payment could not be confirmed. If you were charged, the money is refunded.',
       bookOk: 'Table booked',
-      bookConfirm: 'A confirmation was sent to your email.',
+      bookConfirm: 'A confirmation was sent to {email}. If it does not arrive, check your spam folder.',
       bookAgain: 'Make another booking',
       bookFields: 'Fill in the date, time, name, phone and email.',
+      needDate: 'Choose a date.',
+      needTime: 'Choose a time.',
+      needName: 'Enter your name.',
+      needPhone: 'Enter your phone number.',
+      needEmail: 'Enter your email.',
+      slotGone: '{time} is no longer free for this date and party size. Choose another time.',
       at: 'at',
       generic: 'The connection failed. Please try again in a moment.',
       callUs: 'Call',
@@ -387,6 +399,15 @@
     '.klar-slots button[disabled]{opacity:.35;cursor:default;text-decoration:line-through}',
     '.klar-muted{color:var(--klar-muted);font-size:.9rem}',
     '.klar-err{margin:12px 0 0;color:#a3341f;font-size:.9rem}',
+    /* A field the guest still has to fill in: red border and its own line
+       underneath, where the eye is, rather than only the summary above the
+       button. The time grid has no border of its own, so it gets an outline. */
+    '.klar-field.klar-missing input,.klar-field.klar-missing select,' +
+    '.klar-field.klar-missing textarea{border-color:#a3341f;box-shadow:0 0 0 1px #a3341f}',
+    '.klar-field.klar-missing .klar-slots{outline:1px solid #a3341f;outline-offset:6px;' +
+    'border-radius:var(--klar-radius)}',
+    '.klar-field-err{margin:6px 0 0;color:#a3341f;font-size:.85rem}',
+    '.klar-field-err:empty{display:none}',
     /* "We are shut" is a fact about the restaurant, not the guest's mistake, so
        it is deliberately NOT the red of .klar-err — it is a plain, calm notice
        that still has to be impossible to miss above a menu. */
@@ -1393,6 +1414,55 @@
       bookErrEl.hidden = !message;
     }
 
+    /* A fault is shown AT the field, not only in the line above the button.
+       On a phone that line sits below the fold: a guest who pressed Book with
+       no time chosen saw the page jump to the time grid and nothing else —
+       no red, no message — and read it as "sent". Two such attempts were then
+       reported as bookings that never got a confirmation (La Lasagna,
+       2026-09-13). So the field itself goes red and says what it needs, and
+       the first one is scrolled into view. The note element is made on first
+       use so the form template stays as it is. */
+    function markField(target, message) {
+      var field = target && target.closest ? target.closest('.klar-field') : null;
+      if (!field) return;
+      var note = field.querySelector('.klar-field-err');
+      if (message) {
+        if (!note) {
+          note = doc.createElement('p');
+          note.className = 'klar-field-err';
+          field.appendChild(note);
+        }
+        note.textContent = message;
+        field.classList.add('klar-missing');
+      } else {
+        if (note) note.textContent = '';
+        field.classList.remove('klar-missing');
+      }
+    }
+
+    /* Take the guest to the first thing they still have to fill in. `rows` is
+       [missing?, element] in the order the form reads. The time row is a div
+       of buttons, so it is scrolled to and not focused — focus() on it does
+       nothing and, on iOS, tossing up the keyboard for a non-input is worse
+       than leaving it alone. Wrapped because scrollIntoView options are
+       ignored on older Safari, where the plain call is still correct. */
+    function focusFirstMissing(rows) {
+      for (var i = 0; i < rows.length; i += 1) {
+        if (!rows[i][0]) continue;
+        var target = rows[i][1];
+        if (!target) return;
+        try {
+          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } catch (error) {
+          target.scrollIntoView();
+        }
+        if (typeof target.focus === 'function' && target.tagName !== 'DIV') {
+          target.focus({ preventScroll: true });
+        }
+        return;
+      }
+    }
+
     /** What this party owes, in euros, or null. Mirrors the server's rule. */
     function depositForParty() {
       var size = Number(partyEl.value);
@@ -1426,7 +1496,14 @@
     }
 
     function loadSlots() {
+      /* The time the guest already chose is kept across a party-size or date
+         change when it is still free, and named when it is not. It used to be
+         cleared silently on every reload: pick 20:00, then step the party
+         from 2 to 4, and the choice was gone with nothing on screen to say
+         so — Book then failed for "no time" on a form that looked complete. */
+      var wanted = chosenSlot;
       chosenSlot = '';
+      markField(slotsEl, '');
       if (!dateEl.value) {
         slotsEl.innerHTML = '<span class="klar-muted">—</span>';
         return;
@@ -1458,12 +1535,21 @@
           }
           slotsEl.innerHTML = slots
             .map(function (slot) {
+              var kept = slot.available && slot.time === wanted;
               return (
                 '<button type="button" data-klar-slot="' + esc(slot.time) + '"' +
-                (slot.available ? '' : ' disabled') + '>' + esc(hhmm(slot.time)) + '</button>'
+                (slot.available ? '' : ' disabled') + (kept ? ' class="klar-on"' : '') + '>' +
+                esc(hhmm(slot.time)) + '</button>'
               );
             })
             .join('');
+          if (wanted) {
+            var stillFree = slots.some(function (slot) {
+              return slot.available && slot.time === wanted;
+            });
+            if (stillFree) chosenSlot = wanted;
+            else markField(slotsEl, t.slotGone.replace('{time}', hhmm(wanted)));
+          }
         })
         .catch(function (error) {
           warn(
@@ -1489,9 +1575,21 @@
         esc(people === 1 ? t.person : t.people) + '</p>' +
         '<div class="klar-big">' + esc(confirmed.date || dateEl.value) + ' ' + esc(t.at) + ' ' +
         esc(hhmm(confirmed.time_slot || chosenSlot)) + '</div>' +
-        '<p class="klar-muted">' + esc(t.bookConfirm) + '</p>' +
+        /* The address is printed back so a typo is caught here, by the one
+           person who can see it, and not a week later by a guest who "never
+           got the email". */
+        '<p class="klar-muted">' +
+        esc(t.bookConfirm.replace('{email}', el('bemail').value.trim())) + '</p>' +
         '<button type="button" class="klar-btn" data-klar="book-again" style="margin-top:20px">' +
         esc(t.bookAgain) + '</button>';
+      /* The form the guest was at the bottom of has just collapsed above them;
+         on a phone that leaves whatever sat under the form on screen and the
+         tick out of sight. Bring it into view so "booked" is what they read. */
+      try {
+        ok.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } catch (error) {
+        ok.scrollIntoView();
+      }
       el('book-again').addEventListener('click', function () {
         ok.hidden = true;
         el('book-live').hidden = false;
@@ -1524,6 +1622,7 @@
         var button = event.target.closest('button[data-klar-slot]');
         if (!button || button.disabled) return;
         chosenSlot = button.dataset.klarSlot;
+        markField(slotsEl, '');
         slotsEl.querySelectorAll('button').forEach(function (other) {
           other.classList.toggle('klar-on', other === button);
         });
@@ -1535,6 +1634,20 @@
            for half a second has been told the wrong thing. */
         renderDeposit();
         loadSlots();
+      });
+
+      /* A red field stops being true the moment the guest starts filling it
+         in. Cleared on the first keystroke; the next press of Book says what
+         is actually left. */
+      ['bname', 'bphone', 'bemail'].forEach(function (key) {
+        el(key).addEventListener('input', function () {
+          markField(el(key), '');
+          showBookErr('');
+        });
+      });
+      dateEl.addEventListener('change', function () {
+        markField(dateEl, '');
+        showBookErr('');
       });
 
       /* The tick appears only once there is an allergy to consent to, and an
@@ -1554,8 +1667,21 @@
         var requests = el('breq').value.trim();
         var diet = el('bdiet').value.trim();
         var dietConsent = el('bdiet-consent').checked;
-        if (!dateEl.value || !chosenSlot || !name || !phone || !email) {
+        var required = [
+          [!dateEl.value, dateEl, t.needDate],
+          [!chosenSlot, slotsEl, t.needTime],
+          [!name, el('bname'), t.needName],
+          [!phone, el('bphone'), t.needPhone],
+          [!email, el('bemail'), t.needEmail]
+        ];
+        var incomplete = false;
+        required.forEach(function (row) {
+          markField(row[1], row[0] ? row[2] : '');
+          if (row[0]) incomplete = true;
+        });
+        if (incomplete) {
           showBookErr(t.bookFields);
+          focusFirstMissing(required);
           return;
         }
         /* Refused here as well as on the server. The server is what makes it
