@@ -1089,7 +1089,14 @@
       ok.innerHTML =
         '<div class="klar-check">✓</div><h3>' + esc(t.orderOk) + '</h3>' +
         (reference ? '<p class="klar-muted">' + esc(t.reference) + ' <b>' + esc(reference) + '</b></p>' : '') +
-        (typeof order.totalCents === 'number'
+        /* The figure the guest pays: food plus the delivery fee minus any gift
+           card, which is `amountDueCents`. `totalCents` is food only, and a
+           delivery guest who saw 24,90 € in the basket was shown 20,00 € here
+           (measured 2026-09-13). Older payloads without amountDueCents keep
+           the food total. */
+        (typeof order.amountDueCents === 'number'
+          ? '<div class="klar-big">' + esc(money(order.amountDueCents, order.currency || currency)) + '</div>'
+          : typeof order.totalCents === 'number'
           ? '<div class="klar-big">' + esc(money(order.totalCents, order.currency || currency)) + '</div>'
           : '') +
         /* These two name the room even where `onlinePayment` is true, and that
@@ -1127,6 +1134,11 @@
 
     function placeOrder() {
       if (sending) return;
+      /* A refusal from the previous press must not outlive the guest's
+         correction: measured 2026-09-13, a postcode typed wrong once kept its
+         "we do not deliver to 00900" line after it was fixed to 00120, and the
+         order could not be placed until the page was reloaded. */
+      orderErr = '';
       if (!orderName.trim()) {
         orderErr = t.needName;
         renderCart();
