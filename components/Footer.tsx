@@ -1,22 +1,35 @@
 import { dict, type Locale } from "@/lib/i18n";
 
 /**
- * Reverted 2026-09-08 to its pre-legal-pass appearance on the operator's
- * instruction: the Trustpilot mark is back, and the company-details block and
- * the row of legal links are gone, so the footer looks exactly as it did.
+ * The legal links are back — one row, nothing else moves. They were reverted
+ * on 2026-09-08 ("no visible change") while the site took no orders; on
+ * 2026-09-13 the operator ruled that online ordering goes live WITH the legal
+ * pages, and a page nobody links to is not published. kuluttajansuojalaki 6:9
+ * expects the trader's identity and business ID to be findable before a
+ * consumer orders; the footer row is the usual way, and the order form links
+ * the privacy notice itself (`data-klar-privacy-url` on the embed mount).
  *
- * Two consequences worth knowing rather than rediscovering:
- *
- *  - The four legal pages (/privacy /cookies /terms /refunds and the Finnish
- *    equivalents) still exist and still build. Nothing on the site links to
- *    them now, so a visitor reaches them only from the sitemap or a search
- *    result. kuluttajansuojalaki 6:9 expects the trader's identity and business
- *    ID to be findable before a consumer orders; a footer link is the usual way.
- *  - The Trustpilot image has no link behind it and no Trustpilot profile for
- *    Roba Deli appears anywhere in this repo.
+ * Still true: the Trustpilot image has no link behind it and no Trustpilot
+ * profile for Roba Deli appears anywhere in this repo.
  */
+const LEGAL_LINKS: Record<Locale, Array<{ href: string; label: string }>> = {
+  fi: [
+    { href: "/fi/tietosuoja", label: "Tietosuoja" },
+    { href: "/fi/ehdot", label: "Käyttöehdot" },
+    { href: "/fi/palautukset", label: "Peruutukset" },
+    { href: "/fi/evasteet", label: "Evästeet" },
+  ],
+  en: [
+    { href: "/privacy", label: "Privacy" },
+    { href: "/terms", label: "Terms" },
+    { href: "/refunds", label: "Refunds" },
+    { href: "/cookies", label: "Cookies" },
+  ],
+};
+
 export default function Footer({ locale }: { locale: Locale }) {
   const t = dict[locale];
+  const legal = LEGAL_LINKS[locale] ?? LEGAL_LINKS.en;
   return (
     <footer className="f">
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -44,8 +57,15 @@ export default function Footer({ locale }: { locale: Locale }) {
         <a href="https://www.instagram.com/roba.deli/" target="_blank" rel="noopener noreferrer">Instagram</a>
         <a href="https://www.tiktok.com/@robadeli" target="_blank" rel="noopener noreferrer">TikTok</a>
       </div>
+      <div className="fl">
+        {legal.map((l) => (
+          <a key={l.href} href={l.href}>
+            {l.label}
+          </a>
+        ))}
+      </div>
       <div className="cc">
-        Iso Roobertinkatu 1, 00120 Helsinki · <a href="tel:+358503797490">050 379 7490</a> · © Roba Deli
+        Iso Roobertinkatu 1, 00120 Helsinki · <a href="tel:+358503797490">050 379 7490</a> · © Roba Deli · SubHub Oy · Y-tunnus 3611281-3
       </div>
     </footer>
   );

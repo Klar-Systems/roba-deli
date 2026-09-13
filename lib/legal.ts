@@ -44,23 +44,23 @@ export const COMPANY = {
   legalName: "SubHub Oy",
   /** Finnish business ID. Required before a consumer places an order. */
   businessId: "3611281-3",
-  /** The company's registered address — the controller's address. */
-  address: "Pajuniityntie 3, 00320 Helsinki, Finland",
+  /** The company's registered address — the controller's address. Re-read
+   *  from PRH open data on 2026-09-13: the register carries the stair and flat,
+   *  "Pajuniityntie 3 B 33", and the notice names the address as registered. */
+  address: "Pajuniityntie 3 B 33, 00320 Helsinki, Finland",
   /** The shop itself. content/contact.md, confirmed with the owner. */
   shopAddress: "Iso Roobertinkatu 1, 00120 Helsinki, Finland",
   phone: "+358 50 379 7490",
   phoneDisplay: "050 379 7490",
   /**
-   * NULL, not a placeholder.
-   *
-   * No email address appears in this repo, on robadeli.fi, or in the trade or
-   * food-control registers — the registers do not carry one. Rather than print
-   * a {{TODO}} marker to a customer, every sentence that would have used an
-   * email falls back to the phone number, and `npm run check:legal` fails the
-   * build until the owner supplies one. The gap stays loud for us and invisible
-   * to the guest.
+   * The address the restaurant runs its Klar account on — `tenants.contact_email`
+   * on 2026-09-13, the same inbox every order ticket already lands in. No email
+   * appears in the trade or food-control registers, so this is the only one the
+   * business has given, and a guest writing to it reaches the person who reads
+   * the orders. Typed `string | null` still: the sentences below fall back to
+   * the phone if it is ever removed, and `npm run check:legal` goes loud.
    */
-  email: null as string | null,
+  email: "titashshetu12@gmail.com" as string | null,
   /** FI + the business ID without its dash; VAT-registered since 2026-03-22. */
   vat: "FI36112813",
 } as const;
