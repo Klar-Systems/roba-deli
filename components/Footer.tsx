@@ -1,4 +1,5 @@
 import { dict, type Locale } from "@/lib/i18n";
+import OivaBadge from "@/components/OivaBadge";
 
 export default function Footer({ locale }: { locale: Locale }) {
   const t = dict[locale];
@@ -19,6 +20,7 @@ export default function Footer({ locale }: { locale: Locale }) {
         </a>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/images/trustpilot.svg" alt="Trustpilot" />
+        <OivaBadge locale={locale} />
       </div>
       <div className="fl">
         <a href="#about">{t.nav.about}</a>
