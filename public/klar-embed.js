@@ -1,10 +1,21 @@
 /* klar-embed.js — the drop-in ordering + booking surface for a Klar client site.
  *
- * One file, no build step, no dependencies. Copy it into the site (static sites:
- * next to index.html; Next.js: public/) and add ONE element:
+ * One file, no build step, no dependencies. Two lines into any page:
  *
  *   <div data-klar-slug="ravintola-ani" data-klar-phone="09 622 2797"></div>
- *   <script src="/klar-embed.js" defer></script>
+ *   <script src="https://booking.klarsystems.com/klar-embed.js" defer></script>
+ *
+ * That hosted URL is the DEFAULT install, and the one signup and the owner's
+ * panel hand out. It is this exact file: `apps/booking/scripts/sync-embed.mjs`
+ * copies it into `apps/booking/public` on every build, so this path stays the
+ * single source, and `node scripts/sync-embed.mjs --check` — which is also a
+ * jest test — fails if the served copy has drifted from it.
+ *
+ * Copying the file into the site itself still works and is still supported
+ * (static sites: next to index.html; Next.js: public/) with `src="/klar-embed.js"`.
+ * That is how sites/ravintola-ani, roba-deli and la-lasagna are wired, and it
+ * keeps working when Klar is unreachable at page load. The only difference is
+ * which API the calls go to — see `defaultApi`.
  *
  * It generalises the hand-built surface in sites/ravintola-ani/index.html, which
  * is wired to that site's element ids and Finnish copy. Nothing here is
@@ -14,7 +25,6 @@
  * Public API it talks to (apps/booking):
  *   GET  /api/<orderSlug>/menu           orderable menu; item ids the server prices from
  *   POST /api/<orderSlug>/order          places the order (Idempotency-Key header)
- *   GET  /api/<orderSlug>/gift-card      balance check for a typed gift card code
  *   GET  /api/<bookSlug>/availability    real free slots for a date + party size
  *   POST /api/<bookSlug>/book            creates the booking
  *
@@ -28,10 +38,15 @@
  * database by menu-item id and returns the total.
  *
  * CORS: the API answers a cross-origin request only for an origin on its
- * per-slug allowlist (apps/booking/src/lib/cors.ts). A newly wired site fetches
- * nothing until an operator adds its production origin there. When that has not
- * happened the embed shows its unavailable panel and logs the reason — it never
- * renders an empty box.
+ * per-slug allowlist (apps/booking/src/lib/cors.ts). That allowlist is DERIVED
+ * from the tenant's own records — the live `assets` website row, the address the
+ * owner typed in Asetukset, and their www pairs — since the literal per-tenant
+ * map was deleted on 2026-09-05. So a site fetches as soon as its own address is
+ * recorded against the tenant, with no code change and no deploy. What is NOT
+ * derivable is a site at an address nobody recorded: paste the snippet onto
+ * example.fi while the tenant's records still say something else and the calls
+ * are refused. The embed then shows its unavailable panel and logs the reason —
+ * it never renders an empty box.
  *
  * HOST-MENU MODE — data-klar-menu="host". A site that already has a designed
  * menu section must not grow a second one: the embed then renders the cart and
@@ -59,6 +74,20 @@
   var PARTY_MAX_DEFAULT = 12;
   var BOOKING_HORIZON_DAYS = 90; /* the API's ceiling */
 
+  /* Where this file was served from, captured HERE and not in boot():
+   * document.currentScript is only set while the script executes synchronously,
+   * and boot() may run later on DOMContentLoaded, where it reads null. Empty
+   * string when there is no script element to ask (a bundler inlined it, a test
+   * evaluates the source directly) — every reader treats that as "unknown". */
+  var SCRIPT_ORIGIN = (function () {
+    try {
+      var el = typeof document !== 'undefined' ? document.currentScript : null;
+      return el && el.src ? new URL(el.src, document.baseURI).origin : '';
+    } catch (error) {
+      return '';
+    }
+  })();
+
   /* ---------------------------------------------------------------- copy --- */
 
   var COPY = {
@@ -76,25 +105,6 @@
       phone: 'Puhelin',
       optional: '(vapaaehtoinen)',
       total: 'Yhteensä',
-      /* The gift card (0067): a PAYMENT toward the total, shown under it and
-         never folded into it, with `amountDue` naming what is left to pay. */
-      giftCard: 'Lahjakortti',
-      giftCardHint: '(jos sinulla on)',
-      giftCardCheck: 'Tarkista',
-      giftCardChecking: 'Tarkistetaan…',
-      giftCardRemove: 'Poista',
-      giftCardEmpty: 'Kirjoita lahjakortin koodi.',
-      giftCardBalance: 'Saldo {amount}',
-      amountDue: 'Maksettavaa',
-      /* The refusal, by the server's structured `reason` — never its English
-         sentence. An unmapped reason gets the last one. */
-      giftCardReasons: {
-        not_found: 'Lahjakorttia ei löydy. Tarkista koodi.',
-        void: 'Lahjakortti on mitätöity.',
-        expired: 'Lahjakortti on vanhentunut.',
-        exhausted: 'Lahjakortin saldo on käytetty.',
-        other: 'Lahjakorttia ei voitu käyttää. Yritä uudelleen.'
-      },
       send: 'Lähetä tilaus',
       sending: 'Lähetetään…',
       payAtVenue: 'Maksu ravintolassa. Hinnat lasketaan palvelimella.',
@@ -129,6 +139,7 @@
       orderAgain: 'Tilaa lisää',
       needName: 'Lisää nimi, jotta löydämme tilauksesi.',
       menuLoading: 'Ladataan ruokalistaa…',
+      menuGroup: 'Ruokalista',
       orderingOff: 'Verkkotilaus ei ole juuri nyt käytössä.',
       menuFailed: 'Ruokalistaa ei saatu ladattua. Päivitä sivu.',
       date: 'Päivä',
@@ -159,6 +170,17 @@
       dietaryConsentMissing: 'Rastita suostumus, tai tyhjennä allergiakenttä.',
       book: 'Varaa pöytä',
       booking: 'Varataan…',
+      /* The deposit a large party pays before the table is confirmed. `{eur}`
+         is per guest and `{total}` the whole party's — both filled in below,
+         never concatenated in the caller, so a translation can put them in the
+         order its own grammar needs. */
+      depositNotice:
+        'Vähintään {threshold} hengen seurueelta varausmaksu {eur} € / hlö — yhteensä {total} €. Pöytä vahvistuu maksun jälkeen.',
+      depositPay: 'Maksa varausmaksu ja varaa',
+      depositRedirect: 'Siirrytään maksuun…',
+      depositFinishing: 'Vahvistetaan varausta…',
+      depositFailed:
+        'Maksua ei voitu vahvistaa. Jos rahat lähtivät tililtäsi, ne palautetaan.',
       bookOk: 'Pöytä varattu',
       bookConfirm: 'Vahvistus lähetettiin sähköpostiisi.',
       bookAgain: 'Tee uusi varaus',
@@ -166,6 +188,10 @@
       at: 'klo',
       generic: 'Yhteys ei onnistunut. Yritä hetken päästä uudelleen.',
       callUs: 'Soita',
+      /* Under the order button, only when the host names its notice. `{link}`
+         becomes the anchor; the sentence around it is plain text. */
+      privacyNotice: 'Tilaamalla hyväksyt, että tietojasi käsitellään {link} mukaisesti.',
+      privacyLink: 'tietosuojaselosteen',
       badPhone: 'Tarkista puhelinnumero (esim. +358 40 123 4567).',
       tooMany: 'Liikaa yrityksiä. Odota hetki ja yritä uudelleen.',
       /* The kitchen is shut. `closedDay` and `closedDate` stand alone; the other
@@ -203,21 +229,6 @@
       phone: 'Phone',
       optional: '(optional)',
       total: 'Total',
-      giftCard: 'Gift card',
-      giftCardHint: '(if you have one)',
-      giftCardCheck: 'Check',
-      giftCardChecking: 'Checking…',
-      giftCardRemove: 'Remove',
-      giftCardEmpty: 'Type the gift card code.',
-      giftCardBalance: 'Balance {amount}',
-      amountDue: 'Amount due',
-      giftCardReasons: {
-        not_found: "We can't find that gift card. Check the code.",
-        void: 'This gift card has been cancelled.',
-        expired: 'This gift card has expired.',
-        exhausted: 'This gift card has no balance left.',
-        other: 'The gift card could not be used. Try again.'
-      },
       send: 'Send order',
       sending: 'Sending…',
       payAtVenue: 'Pay at the restaurant. Prices are calculated on the server.',
@@ -246,6 +257,7 @@
       orderAgain: 'Order more',
       needName: 'Add a name so we can find your order.',
       menuLoading: 'Loading the menu…',
+      menuGroup: 'Menu',
       orderingOff: 'Online ordering is not available right now.',
       menuFailed: 'The menu could not be loaded. Please refresh the page.',
       date: 'Date',
@@ -272,6 +284,13 @@
       dietaryConsentMissing: 'Please tick the box, or clear the allergy field.',
       book: 'Book a table',
       booking: 'Booking…',
+      depositNotice:
+        'Parties of {threshold} or more pay a {eur} € deposit per guest — {total} € in total. The table is confirmed once it is paid.',
+      depositPay: 'Pay the deposit and book',
+      depositRedirect: 'Taking you to the payment…',
+      depositFinishing: 'Confirming your booking…',
+      depositFailed:
+        'The payment could not be confirmed. If you were charged, the money is refunded.',
       bookOk: 'Table booked',
       bookConfirm: 'A confirmation was sent to your email.',
       bookAgain: 'Make another booking',
@@ -279,6 +298,8 @@
       at: 'at',
       generic: 'The connection failed. Please try again in a moment.',
       callUs: 'Call',
+      privacyNotice: 'By ordering you agree that your details are handled as described in the {link}.',
+      privacyLink: 'privacy notice',
       badPhone: 'Check the phone number (e.g. +358 40 123 4567).',
       tooMany: 'Too many attempts. Wait a moment and try again.',
       closedDay: 'The restaurant is closed today and is not taking orders.',
@@ -358,15 +379,6 @@
     '.klar-total{display:flex;justify-content:space-between;align-items:baseline;',
     'margin-top:14px;font-weight:700}',
     '.klar-tv{font-size:1.25rem;font-variant-numeric:tabular-nums}',
-    /* The card and what is left: two quieter rows under the total, same
-       two-column shape, so the big number stays the order's value. */
-    '.klar-gift{display:flex;justify-content:space-between;align-items:baseline;',
-    'margin-top:6px;font-variant-numeric:tabular-nums}',
-    '.klar-gift-due{font-weight:700}',
-    '.klar-gift-row{display:flex;gap:8px}',
-    '.klar-gift-row input{flex:1 1 auto;min-width:0;text-transform:uppercase}',
-    '.klar-gift-row button{flex:0 0 auto}',
-    '.klar-gift-ok{margin:6px 0 0;font-size:.85rem;font-weight:600}',
     '.klar-slots{display:flex;flex-wrap:wrap;gap:8px;min-height:42px;align-items:center}',
     '.klar-slots button{padding:9px 14px;border:1px solid var(--klar-line);background:',
     'transparent;border-radius:var(--klar-radius);cursor:pointer;font:inherit;color:inherit}',
@@ -460,6 +472,22 @@
 
   function defaultApi(loc) {
     var host = loc && loc.hostname;
+
+    /* Served BY Klar rather than copied into the site: the origin that handed
+     * out this file is the API that answers for it. This is what makes the
+     * hosted two-line install work on a preview deployment and on any future
+     * booking host without the owner editing the snippet — the alternative,
+     * a baked-in production hostname, means a preview page silently calls
+     * production and nothing about the wiring can be tested before it is live.
+     *
+     * Only when the script came from ANOTHER origin. A file copied into the
+     * site is same-origin with the page, and its origin says nothing about
+     * where the API is — those installs fall through to the rules below, which
+     * is exactly the behaviour they have always had. */
+    if (SCRIPT_ORIGIN && loc && loc.origin && SCRIPT_ORIGIN !== loc.origin) {
+      return SCRIPT_ORIGIN;
+    }
+
     /* Served from localhost the calls point at a local booking app on :3001,
      * which is also the only origin the API's CORS allowlist accepts outside
      * production. */
@@ -482,6 +510,12 @@
       hostMenu: (data.klarMenu || '').trim().toLowerCase() === 'host',
       api: (data.klarApi || defaultApi(loc)).replace(/\/$/, ''),
       phone: (data.klarPhone || '').trim(),
+      /* Where the host site's privacy notice lives (data-klar-privacy-url,
+         e.g. "/fi/tietosuoja"). The checkout collects a name, a phone, an
+         email and on delivery a street address, and the notice that says what
+         happens to them is the SITE's — the embed does not know the site's
+         routes, so the host names it. Empty = no line, never a guessed path. */
+      privacyUrl: (data.klarPrivacyUrl || '').trim(),
       timezone: (data.klarTimezone || 'Europe/Helsinki').trim(),
       partyMax: partyMax > 0 ? partyMax : PARTY_MAX_DEFAULT,
       copy: COPY[locale] || COPY.fi,
@@ -560,7 +594,12 @@
           '<div class="klar-field"><label>' + esc(t.date) + '</label>' +
           '<input type="date" data-klar="date"></div>' +
           '<div class="klar-field"><label>' + esc(t.party) + '</label>' +
-          '<select data-klar="party"></select></div>' +
+          '<select data-klar="party"></select>' +
+          /* What a large party will be asked to pay. Rendered under the size
+             picker rather than by the button, because it is the size that
+             decides it and the guest is looking here when they choose. Empty
+             and hidden for every venue and every party that owes nothing. */
+          '<p class="klar-note" data-klar="deposit-note" hidden></p></div>' +
           '<div class="klar-field"><label>' + esc(t.time) + '</label>' +
           '<div class="klar-slots" data-klar="slots"></div></div>' +
           '<div class="klar-field"><label>' + esc(t.name) + '</label>' +
@@ -644,20 +683,6 @@
     var deliveryPostcode = '';
     var deliveryCity = '';
     var deliveryNote = '';
-    /* The gift card (0067). `giftCode` is what the guest typed; `giftCard` is
-       the one the venue accepted ({ code, balanceCents }) or null; `giftMsg`
-       is the line under the field and `giftOk` says whether it is a balance
-       or a refusal. The server prices the draw-down itself — the balance
-       here only previews min(balance, total). */
-    var giftCode = '';
-    /* Off until `GET /menu` says this venue sells gift cards (0068's switch,
-       default false). A field offered by a venue that has none can only ever
-       answer "not found", so it is not rendered at all. */
-    var giftCardsOn = false;
-    var giftCard = null;
-    var giftMsg = '';
-    var giftOk = false;
-    var giftChecking = false;
     /* Kept so klar:sync can replay them to a host that mounted late. */
     var lastMenu = null;
     var lastCart = null;
@@ -753,6 +778,18 @@
       if (!cartWrap) return;
       var count = cart.reduce(function (sum, line) { return sum + line.qty; }, 0);
       var total = cart.reduce(function (sum, line) { return sum + line.cents * line.qty; }, 0);
+      /* `delivery` is nulled by menuLoaded when the offer is off, and
+         `fulfilment` is moved off 'delivery' in the same breath, so the two
+         cannot disagree here. */
+      var isDelivery = fulfilment === 'delivery' && !!delivery;
+      var feeCents = isDelivery ? delivery.feeCents : 0;
+      var minimumNote =
+        isDelivery && delivery.minOrderCents > 0
+          ? (total < delivery.minOrderCents ? t.belowMinimum : t.minimumHint).replace(
+              '{eur}',
+              money(delivery.minOrderCents, currency)
+            )
+          : '';
       lastCart = {
         lines: cart.map(function (line) {
           return { id: line.id, name: line.name, cents: line.cents, qty: line.qty };
@@ -790,21 +827,6 @@
           '<h3>' + esc(t.cartTitle) + '</h3><p class="klar-muted">' + esc(t.cartEmpty) + '</p>';
         return;
       }
-      /* `delivery` is nulled by menuLoaded when the offer is off, and
-         `fulfilment` is moved off 'delivery' in the same breath, so the two
-         cannot disagree here. */
-      var isDelivery = fulfilment === 'delivery' && !!delivery;
-      var feeCents = isDelivery ? delivery.feeCents : 0;
-      var minimumNote =
-        isDelivery && delivery.minOrderCents > 0
-          ? (total < delivery.minOrderCents ? t.belowMinimum : t.minimumHint).replace(
-              '{eur}',
-              money(delivery.minOrderCents, currency)
-            )
-          : '';
-      /* Clamped the way the server clamps it: min(balance, food + fee) —
-         ordering.ts draws the card down against grandCents. */
-      var giftCents = giftCard ? Math.min(giftCard.balanceCents, total + feeCents) : 0;
       cartWrap.innerHTML =
         '<h3>' + esc(t.cartTitle) + ' · ' + count + '</h3>' +
         cart
@@ -861,20 +883,6 @@
         esc(t.namePlaceholder) + '" value="' + esc(orderName) + '"></div>' +
         '<div class="klar-field"><label>' + esc(t.phone) + ' ' + esc(t.optional) + '</label>' +
         '<input type="tel" autocomplete="tel" data-klar="ophone" value="' + esc(orderPhone) + '"></div>' +
-        (giftCardsOn
-          ? '<div class="klar-field"><label>' + esc(t.giftCard) + ' ' + esc(t.giftCardHint) + '</label>' +
-            '<div class="klar-gift-row">' +
-            '<input type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" ' +
-            'data-klar="ogift" value="' + esc(giftCode) + '"' + (giftCard ? ' disabled' : '') + '>' +
-            '<button type="button" class="klar-btn" data-klar="' +
-            (giftCard ? 'gift-remove' : 'gift-check') + '"' + (giftChecking ? ' disabled' : '') + '>' +
-            esc(giftCard ? t.giftCardRemove : giftChecking ? t.giftCardChecking : t.giftCardCheck) +
-            '</button></div>' +
-            (giftMsg
-              ? '<p class="' + (giftOk ? 'klar-gift-ok' : 'klar-err') + '">' + esc(giftMsg) + '</p>'
-              : '') +
-            '</div>'
-          : '') +
         /* Three lines on a delivery order, one otherwise: the guest pays food
            plus fee, and a total that quietly grew is the complaint this avoids.
            The fee is the tenant's own number off GET /menu; the server prices
@@ -887,14 +895,6 @@
           : '') +
         '<div class="klar-total"><span class="klar-muted">' + esc(t.total) + '</span>' +
         '<span class="klar-tv">' + esc(money(total + feeCents, currency)) + '</span></div>' +
-        /* A PAYMENT toward the total, so it sits under it: the total stays the
-           order's value and the last row is what the guest still hands over. */
-        (giftCents > 0
-          ? '<div class="klar-gift"><span class="klar-muted">' + esc(t.giftCard) + '</span>' +
-            '<span>−' + esc(money(giftCents, currency)) + '</span></div>' +
-            '<div class="klar-gift klar-gift-due"><span>' + esc(t.amountDue) + '</span>' +
-            '<span>' + esc(money(total + feeCents - giftCents, currency)) + '</span></div>'
-          : '') +
         /* The minimum, stated before the guest presses send — against the FOOD
            total, never the total with the fee in it, the same comparison the
            server makes. Skipped when the submit error already says the same. */
@@ -904,7 +904,20 @@
         (orderErr ? '<p class="klar-err">' + esc(orderErr) + '</p>' : '') +
         '<button type="button" class="klar-btn klar-btn-full" data-klar="order-submit"' +
         (sending ? ' disabled' : '') + '>' + esc(sending ? t.sending : t.send) + '</button>' +
-        '<p class="klar-note">' + esc(onlinePayment ? t.payOnline : t.payAtVenue) + '</p>';
+        '<p class="klar-note">' + esc(onlinePayment ? t.payOnline : t.payAtVenue) + '</p>' +
+        /* The privacy line, when the host site named its notice. It sits under
+           the button the guest is about to press because that is the moment
+           the name, phone, email and address they typed leave the page. The
+           URL is the host's own attribute, escaped like every other value. */
+        (cfg.privacyUrl
+          ? '<p class="klar-note">' +
+            esc(t.privacyNotice).replace(
+              '{link}',
+              '<a href="' + esc(cfg.privacyUrl) + '" target="_blank" rel="noopener noreferrer">' +
+                esc(t.privacyLink) + '</a>'
+            ) +
+            '</p>'
+          : '');
     }
 
     /* Any change to what is being ordered starts a new checkout attempt: an
@@ -917,6 +930,23 @@
       categories = (data.categories || []).filter(function (c) {
         return (c.items || []).length > 0;
       });
+      /* A dish with no category is still a dish for sale.
+       *
+       * `GET /menu` returns TWO lists — `categories` and `uncategorised` — and
+       * this read only ever looked at the first. The owner's menu editor does
+       * not require a category, so a restaurant that signs up and adds its food
+       * the obvious way publishes a menu its own admin screen renders in full,
+       * while every guest on its website is told "Verkkotilaus ei ole juuri nyt
+       * kaytossa" and handed a phone number. Measured end to end on a fresh
+       * signup 2026-09-08: two dishes on sale, zero reachable, ordering dead.
+       *
+       * Appended LAST, so a restaurant that does use categories sees no change
+       * in order; a restaurant that uses none gets a single plain list, which
+       * is the shape a small takeaway menu wants anyway. */
+      var loose = (data.uncategorised || []).filter(Boolean);
+      if (loose.length > 0) {
+        categories = categories.concat([{ id: null, name: t.menuGroup, items: loose }]);
+      }
       allowsEatIn = data.client ? data.client.allowsEatIn !== false : true;
       if (!allowsEatIn) fulfilment = 'takeaway';
       onlinePayment = !!(data.client && data.client.onlinePayment === true);
@@ -936,10 +966,6 @@
             }
           : null;
       if (!delivery && fulfilment === 'delivery') fulfilment = allowsEatIn ? 'eat_in' : 'takeaway';
-      /* Opt-in, unlike eat-in: a venue that has never sold a gift card must not
-         be made to look as if it does. An older API that does not publish the
-         flag at all therefore hides the field too. */
-      giftCardsOn = !!(data.client && data.client.giftCardsEnabled === true);
       var first = categories[0] && categories[0].items[0];
       if (first && first.currency) currency = first.currency;
       if (categories.length === 0) {
@@ -1066,21 +1092,6 @@
         (typeof order.totalCents === 'number'
           ? '<div class="klar-big">' + esc(money(order.totalCents, order.currency || currency)) + '</div>'
           : '') +
-        /* What the card paid and what is left, read back from the server —
-           the draw-down happened there. `amountDueCents` is the number the
-           guest hands over; it is printed big because it is the one that
-           matters at the counter. */
-        (typeof order.giftCardCents === 'number' && order.giftCardCents > 0
-          ? '<p class="klar-muted">' + esc(t.giftCard) + ' −' +
-            esc(money(order.giftCardCents, order.currency || currency)) + '</p>' +
-            '<div class="klar-big">' + esc(t.amountDue) + ' ' +
-            esc(money(
-              typeof order.amountDueCents === 'number'
-                ? order.amountDueCents
-                : Math.max(0, (order.totalCents || 0) - order.giftCardCents),
-              order.currency || currency
-            )) + '</div>'
-          : '') +
         /* These two name the room even where `onlinePayment` is true, and that
            is deliberate rather than an oversight. This embed keeps no order in
            storage, so the confirmation exists only during the visit the order
@@ -1105,10 +1116,6 @@
       deliveryCity = '';
       deliveryNote = '';
       orderErr = '';
-      giftCode = '';
-      giftCard = null;
-      giftMsg = '';
-      giftOk = false;
       checkoutKey = null;
       renderItems();
       renderCart();
@@ -1116,67 +1123,6 @@
         ok.hidden = true;
         el('order-live').hidden = false;
       });
-    }
-
-    function giftReasonText(reason) {
-      return t.giftCardReasons[reason] || t.giftCardReasons.other;
-    }
-
-    /* GET /api/<orderSlug>/gift-card?code=… — { valid, balanceCents } or
-       { valid: false, reason }. Only a card with a balance is kept. */
-    function checkGiftCard() {
-      if (giftChecking) return;
-      var code = giftCode.trim();
-      if (!code) {
-        giftOk = false;
-        giftMsg = t.giftCardEmpty;
-        renderCart();
-        return;
-      }
-      giftChecking = true;
-      giftMsg = '';
-      renderCart();
-      win
-        .fetch(
-          cfg.api + '/api/' + encodeURIComponent(cfg.orderSlug) + '/gift-card?code=' +
-            encodeURIComponent(code),
-          { headers: { Accept: 'application/json' } }
-        )
-        .then(readJson)
-        .then(function (result) {
-          giftChecking = false;
-          var body = result.body || {};
-          if (result.ok && body.valid === true && typeof body.balanceCents === 'number' && body.balanceCents > 0) {
-            giftCard = { code: code, balanceCents: body.balanceCents };
-            giftOk = true;
-            giftMsg = t.giftCardBalance.replace('{amount}', money(body.balanceCents, body.currency || currency));
-          } else {
-            if (!result.ok) warn('gift card lookup refused for "' + cfg.orderSlug + '" (' + result.status + ').', body);
-            giftCard = null;
-            giftOk = false;
-            giftMsg = giftReasonText(body.reason);
-          }
-          /* A different card is a different order for the Idempotency-Key. */
-          cartChanged();
-          renderCart();
-        })
-        .catch(function (error) {
-          giftChecking = false;
-          giftCard = null;
-          giftOk = false;
-          warn('gift card lookup failed for "' + cfg.orderSlug + '".', error);
-          giftMsg = t.generic;
-          renderCart();
-        });
-    }
-
-    function removeGiftCard() {
-      giftCode = '';
-      giftCard = null;
-      giftMsg = '';
-      giftOk = false;
-      cartChanged();
-      renderCart();
     }
 
     function placeOrder() {
@@ -1235,9 +1181,7 @@
         fulfilmentType: fulfilment,
         items: cart.map(function (line) {
           return { menuItemId: line.id, qty: line.qty };
-        }),
-        /* Only a card the lookup accepted; the server re-checks it. */
-        giftCardCode: giftCard ? giftCard.code : undefined
+        })
       };
       if (address) {
         payload.deliveryStreet = address.deliveryStreet;
@@ -1256,22 +1200,6 @@
           sending = false;
           if (!result.ok) {
             warn('order rejected for "' + cfg.orderSlug + '" (' + result.status + ').', result.body);
-            /* The card the lookup accepted was refused at the write — voided,
-               drained or lost a race in between. Dropped, so the rows stop
-               promising a payment the venue will not honour, and the reason
-               is said beside the field in the embed's own language. */
-            if (
-              result.body &&
-              (result.body.code === 'GIFT_CARD_INVALID' || result.body.error === 'GIFT_CARD_INVALID')
-            ) {
-              giftCard = null;
-              giftOk = false;
-              giftMsg = giftReasonText(result.body.reason);
-              orderErr = giftMsg;
-              cartChanged();
-              renderCart();
-              return;
-            }
             /* The kitchen shut between loading the menu and pressing send —
                the guest sat on the page past the last order time, or the venue
                closed the day underneath them. The refusal carries the same
@@ -1417,14 +1345,6 @@
           renderCart();
           return;
         }
-        if (event.target.closest('[data-klar="gift-check"]')) {
-          checkGiftCard();
-          return;
-        }
-        if (event.target.closest('[data-klar="gift-remove"]')) {
-          removeGiftCard();
-          return;
-        }
         if (event.target.closest('[data-klar="order-submit"]')) placeOrder();
       });
 
@@ -1432,21 +1352,10 @@
         var field = event.target.dataset ? event.target.dataset.klar : null;
         if (field === 'oname') orderName = event.target.value;
         if (field === 'ophone') orderPhone = event.target.value;
-        if (field === 'ogift') giftCode = event.target.value;
         if (field === 'dstreet') deliveryStreet = event.target.value;
         if (field === 'dpostcode') deliveryPostcode = event.target.value;
         if (field === 'dcity') deliveryCity = event.target.value;
         if (field === 'dnote') deliveryNote = event.target.value;
-      });
-
-      /* Enter in the code field checks the card; it must never send the order
-         with a code nobody has looked at. */
-      cartWrap.addEventListener('keydown', function (event) {
-        var field = event.target.dataset ? event.target.dataset.klar : null;
-        if (field === 'ogift' && event.key === 'Enter') {
-          event.preventDefault();
-          if (!giftCard) checkGiftCard();
-        }
       });
 
       renderCart();
@@ -1461,10 +1370,47 @@
     var bookBtn = el('book-submit');
     var chosenSlot = '';
     var booking = false;
+    /* The venue's deposit rule, as the availability answer last stated it:
+       { amount_per_guest_eur, threshold } or null. Never inferred here — a
+       widget that decided for itself which parties owe a deposit would be a
+       second rule to disagree with the server's. */
+    var depositRule = null;
 
     function showBookErr(message) {
       bookErrEl.textContent = message;
       bookErrEl.hidden = !message;
+    }
+
+    /** What this party owes, in euros, or null. Mirrors the server's rule. */
+    function depositForParty() {
+      var size = Number(partyEl.value);
+      if (!depositRule || !size || size < depositRule.threshold) return null;
+      return {
+        perGuest: depositRule.amount_per_guest_eur,
+        total: depositRule.amount_per_guest_eur * size
+      };
+    }
+
+    /* The line under the party picker and the wording on the button, kept in
+       one place: they are two halves of the same statement, and a button that
+       says "book" under a line saying "pay first" is how a guest ends up
+       surprised on Stripe's page. */
+    function renderDeposit() {
+      var note = el('deposit-note');
+      var owed = depositForParty();
+      if (!note) return;
+      if (!owed) {
+        note.hidden = true;
+        note.textContent = '';
+        if (!booking) bookBtn.textContent = t.book;
+        return;
+      }
+      note.hidden = false;
+      note.textContent = t.depositNotice
+        .replace('{threshold}', String(depositRule.threshold))
+        .replace('{eur}', String(owed.perGuest))
+        .replace('{total}', String(owed.total));
+      if (!booking) bookBtn.textContent = t.depositPay;
     }
 
     function loadSlots() {
@@ -1484,6 +1430,11 @@
           return response.json();
         })
         .then(function (data) {
+          /* The rule travels with availability, so it is refreshed by the same
+             call the slot grid comes from and a venue switching it on reaches
+             the widget without a redeploy. */
+          depositRule = data.deposit || null;
+          renderDeposit();
           var slots = data.slots || [];
           if (slots.length === 0) {
             slotsEl.innerHTML = '<span class="klar-muted">' + esc(t.closed) + '</span>';
@@ -1566,7 +1517,13 @@
         });
       });
       dateEl.addEventListener('change', loadSlots);
-      partyEl.addEventListener('change', loadSlots);
+      partyEl.addEventListener('change', function () {
+        /* The line has to move with the picker, not with the answer that comes
+           back a moment later — a guest who steps 7 -> 8 and reads "no deposit"
+           for half a second has been told the wrong thing. */
+        renderDeposit();
+        loadSlots();
+      });
 
       /* The tick appears only once there is an allergy to consent to, and an
          emptied field takes the tick away with it — otherwise a guest who
@@ -1597,32 +1554,114 @@
           return;
         }
         showBookErr('');
+
+        var payload = {
+          guest_name: name,
+          guest_phone: phone,
+          guest_email: email,
+          party_size: Number(partyEl.value),
+          date: dateEl.value,
+          time_slot: chosenSlot,
+          special_requests: requests || undefined,
+          dietary_notes: diet || undefined,
+          health_consent: diet ? dietConsent : undefined,
+          health_consent_language: cfg.locale,
+          source: 'widget'
+        };
+
+        /* A party the venue asks a deposit of never posts the booking from
+           here. It goes to Stripe first and the booking is made on the way
+           back — the server refuses this payload without a paid session, so
+           posting it anyway would only produce a 402 the guest has to read. */
+        if (depositForParty()) {
+          startDeposit(payload);
+          return;
+        }
+        submitBooking(payload);
+      });
+
+      /* Send the guest to Stripe, having first put the form they filled in
+         somewhere it survives the trip. sessionStorage, not the URL: the
+         allergy note is health data and a query string is written into
+         history, logs and anything sitting in front of the site. It is read
+         once on the way back and deleted immediately, whatever happened. */
+      function startDeposit(payload) {
         booking = true;
         bookBtn.disabled = true;
-        bookBtn.textContent = t.booking;
+        bookBtn.textContent = t.depositRedirect;
+        win
+          .fetch(cfg.api + '/api/' + encodeURIComponent(cfg.bookSlug) + '/book/deposit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              date: payload.date,
+              time_slot: payload.time_slot,
+              party_size: payload.party_size,
+              return_url: win.location.href.split('#')[0]
+            })
+          })
+          .then(readJson)
+          .then(function (result) {
+            if (!result.ok || !result.body.checkout_url) {
+              booking = false;
+              bookBtn.disabled = false;
+              renderDeposit();
+              warn('deposit session refused for "' + cfg.bookSlug + '".', result.body);
+              showBookErr(result.body.error || t.generic + callUs());
+              if (result.body.code === 'SLOT_TAKEN') loadSlots();
+              return;
+            }
+            try {
+              win.sessionStorage.setItem(
+                depositStoreKey(),
+                JSON.stringify({ payload: payload, session: result.body.session_id })
+              );
+            } catch (storageError) {
+              /* Private mode, or storage full. Nothing has been charged yet,
+                 so the honest move is to stop before it is. */
+              booking = false;
+              bookBtn.disabled = false;
+              renderDeposit();
+              warn('the booking could not be held across the payment.', storageError);
+              showBookErr(t.generic + callUs());
+              return;
+            }
+            win.location.href = result.body.checkout_url;
+          })
+          .catch(function (error) {
+            booking = false;
+            bookBtn.disabled = false;
+            renderDeposit();
+            warn('deposit request failed for "' + cfg.bookSlug + '".', error);
+            showBookErr(t.generic + callUs());
+          });
+      }
+
+      function submitBooking(payload, depositSession) {
+        booking = true;
+        bookBtn.disabled = true;
+        bookBtn.textContent = depositSession ? t.depositFinishing : t.booking;
         win
           .fetch(cfg.api + '/api/' + encodeURIComponent(cfg.bookSlug) + '/book', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              guest_name: name,
-              guest_phone: phone,
-              guest_email: email,
-              party_size: Number(partyEl.value),
-              date: dateEl.value,
-              time_slot: chosenSlot,
-              special_requests: requests || undefined,
-              dietary_notes: diet || undefined,
-              health_consent: diet ? dietConsent : undefined,
-              health_consent_language: cfg.locale,
-              source: 'widget'
-            })
+            body: JSON.stringify(
+              depositSession
+                ? Object.keys(payload).reduce(
+                    function (out, key) {
+                      out[key] = payload[key];
+                      return out;
+                    },
+                    { deposit_session: depositSession }
+                  )
+                : payload
+            )
           })
           .then(readJson)
           .then(function (result) {
             booking = false;
             bookBtn.disabled = false;
-            bookBtn.textContent = t.book;
+            renderDeposit();
             if (!result.ok) {
               warn('booking rejected for "' + cfg.bookSlug + '" (' + result.status + ').', result.body);
               /* The API returns per-field messages — show them, they are more
@@ -1635,20 +1674,84 @@
                     })
                     .join(' · ')
                 : '';
-              showBookErr(detail || result.body.error || t.generic + callUs());
+              /* A deposit that could not be honoured says so in the guest's own
+                 terms, including the fact that the money comes back — the
+                 server's code is precise but it is written for us, not them. */
+              var depositProblem =
+                typeof result.body.code === 'string' &&
+                result.body.code.indexOf('DEPOSIT_') === 0;
+              showBookErr(
+                depositProblem
+                  ? t.depositFailed + callUs()
+                  : detail || result.body.error || t.generic + callUs()
+              );
               if (result.body.code === 'SLOT_TAKEN') loadSlots();
               return;
             }
-            showBookOk(name, result.body.booking || {});
+            showBookOk(payload.guest_name, result.body.booking || {});
           })
           .catch(function (error) {
             booking = false;
             bookBtn.disabled = false;
-            bookBtn.textContent = t.book;
+            renderDeposit();
             warn('booking request failed for "' + cfg.bookSlug + '".', error);
             showBookErr(t.generic + callUs());
           });
-      });
+      }
+
+      /* Where the guest lands when Stripe is done. The session id is in the
+         query string, the form is in sessionStorage, and the booking is made
+         now — the payment on its own has bought nothing yet. The stored form
+         is deleted before the request goes out, so a reload can never post the
+         same guest twice, and the parameter is stripped from the URL so a
+         shared or bookmarked link carries no payment reference. */
+      function resumeFromDeposit() {
+        var params;
+        try {
+          params = new win.URL(win.location.href).searchParams;
+        } catch (urlError) {
+          return false;
+        }
+        var sessionId = params.get('klar_deposit');
+        if (!sessionId) return false;
+
+        var stored = null;
+        try {
+          var raw = win.sessionStorage.getItem(depositStoreKey());
+          win.sessionStorage.removeItem(depositStoreKey());
+          if (raw) stored = JSON.parse(raw);
+        } catch (storageError) {
+          warn('the held booking could not be read back.', storageError);
+        }
+
+        try {
+          var clean = new win.URL(win.location.href);
+          clean.searchParams.delete('klar_deposit');
+          win.history.replaceState({}, '', clean.toString());
+        } catch (historyError) { /* a URL the browser will not rewrite is cosmetic */ }
+
+        if (!stored || !stored.payload || stored.session !== sessionId) {
+          /* Paid, but this browser cannot say what for — a different device, a
+             cleared tab, a link forwarded to somebody else. Nothing is booked
+             and nothing is charged twice; the venue is the only one who can
+             sort it out, so the guest is pointed at them. */
+          warn('returned from a deposit payment with no held booking.', sessionId);
+          showBookErr(t.depositFailed + callUs());
+          return true;
+        }
+
+        dateEl.value = stored.payload.date;
+        partyEl.value = String(stored.payload.party_size);
+        chosenSlot = stored.payload.time_slot;
+        submitBooking(stored.payload, sessionId);
+        return true;
+      }
+
+      function depositStoreKey() {
+        return 'klar-deposit-' + cfg.bookSlug;
+      }
+
+      mount.klarResumeDeposit = resumeFromDeposit;
     }
 
     /* ---- lazy start: a visitor who never scrolls here pays for no request ---- */
@@ -1657,7 +1760,12 @@
       if (started) return;
       started = true;
       if (cfg.order) loadMenu();
-      if (cfg.book) loadSlots();
+      if (cfg.book) {
+        loadSlots();
+        /* A guest coming back from Stripe has already paid, so this runs on
+           start rather than waiting for the section to be scrolled to. */
+        if (mount.klarResumeDeposit) mount.klarResumeDeposit();
+      }
     }
     mount.klarStart = start; /* so a nav link or a test can force it */
 

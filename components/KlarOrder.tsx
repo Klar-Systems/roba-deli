@@ -74,6 +74,12 @@ export default function KlarOrder({ locale }: { locale: Locale }) {
             data-klar-menu="host"
             data-klar-phone="+358 50 379 7490"
             data-klar-locale={locale}
+            /* The checkout collects a name, phone, email and on delivery an
+               address; this is the notice that says what happens to them. The
+               embed draws one sentence with this link under the order button
+               and draws nothing when the attribute is absent — so it is set
+               here, per language, to the page this site actually serves. */
+            data-klar-privacy-url={locale === "fi" ? "/fi/tietosuoja" : "/privacy"}
           />
         </div>
       </section>
