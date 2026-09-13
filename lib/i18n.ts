@@ -94,6 +94,7 @@ export const dict = {
     },
     footer: {
       tagline: "Handcrafted sandwiches, wraps & provisions",
+      oiva: "Oiva report · Excellent",
     },
   },
 
@@ -187,6 +188,7 @@ export const dict = {
     },
     footer: {
       tagline: "Käsintehdyt voileivät, wrapit & herkut",
+      oiva: "Oiva-raportti · Oivallinen",
     },
   },
 } as const;
