@@ -26,16 +26,16 @@ export default function OivaBadge({ locale }: { locale: Locale }) {
       rel="noopener noreferrer"
       aria-label={`${t.oiva} ${OIVA_REPORT_DATE} (PDF)`}
     >
-      {/* The official Oivallinen smiley is an orange outline face (see the
-          report itself) — drawn here, not fetched, in Oiva's orange. */}
+      {/* The Oivallinen smiley is an outline face (see the report itself),
+          drawn here in the Trustpilot green already used in this row. */}
       <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false">
-        <circle cx="16" cy="16" r="14" fill="none" stroke="#E8921E" strokeWidth="2.4" />
-        <circle cx="11.3" cy="12.6" r="2" fill="#E8921E" />
-        <circle cx="20.7" cy="12.6" r="2" fill="#E8921E" />
+        <circle cx="16" cy="16" r="14" fill="none" stroke="#00B67A" strokeWidth="2.4" />
+        <circle cx="11.3" cy="12.6" r="2" fill="#00B67A" />
+        <circle cx="20.7" cy="12.6" r="2" fill="#00B67A" />
         <path
           d="M9.2 18.6 Q16 26.2 22.8 18.6"
           fill="none"
-          stroke="#E8921E"
+          stroke="#00B67A"
           strokeWidth="2.4"
           strokeLinecap="round"
         />
