@@ -86,7 +86,32 @@ export const DEALS: Deal[] = [
   { k: "Duo deal", kFi: "Duo-tarjous", price: "€23.99", d: "Two L subs", dFi: "Kaksi L-subia", note: "Excl. Pastrami Burger", noteFi: "Pl. Pastrami Burger" },
 ];
 
-export type Review = { text: string; who: string };
+/**
+ * A guest review reprinted on the page.
+ *
+ * `source` and `dated` are optional because these three carry neither. Fill
+ * them in if the owner ever confirms where each came from.
+ */
+export type Review = { text: string; who: string; source?: string; dated?: string };
+
+/**
+ * RESTORED 2026-09-08 on the operator's instruction, after being removed the
+ * same day. The visible page is to stay exactly as it was.
+ *
+ * The concern that prompted the removal has not gone away and is recorded here
+ * so nobody has to rediscover it: nothing in this repo says where these three
+ * quotes came from, while every other fact in this file carries a provenance
+ * note — the menu is "verified live on robadeli.fi", the Place ID is "measured
+ * from Maps on 2026-09-07". Publishing a review a trader cannot show is genuine
+ * is a banned practice under the Omnibus Directive (Annex I, points 23b-23c),
+ * transposed in kuluttajansuojalaki 2 luku, and the named individuals could
+ * object directly.
+ *
+ * What has NOT been restored is the schema.org `Review` markup in
+ * lib/structured-data.ts. That is invisible to a visitor, so leaving it out
+ * costs nothing on the page, and it was the part that carried a concrete Google
+ * penalty. See the note there.
+ */
 export const REVIEWS: Review[] = [
   { text: "Amazing good subs! I'm definitely coming back.", who: "Oliver Österberg" },
   { text: "Super good sandwiches. You have to try the Philly!", who: "Elias Mella" },

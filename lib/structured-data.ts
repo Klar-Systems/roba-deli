@@ -1,4 +1,4 @@
-import { MENU, REVIEWS } from "@/lib/data";
+import { MENU } from "@/lib/data";
 import { SITE_URL } from "@/lib/site";
 
 // Full machine-readable menu (schema.org/Menu) — lets Google and AI engines read
@@ -106,10 +106,18 @@ export const restaurantJsonLd = {
     "https://www.facebook.com/Robadeli26/",
     "https://www.tiktok.com/@robadeli",
   ],
-  review: REVIEWS.map((r) => ({
-    "@type": "Review",
-    author: { "@type": "Person", name: r.who },
-    reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" },
-    reviewBody: r.text,
-  })),
+  // NO `review` and no `aggregateRating` here, deliberately.
+  //
+  // This file used to emit the three quotes in lib/data.ts as schema.org Review
+  // objects with a hardcoded 5-star rating. Nothing in this repo records where
+  // those quotes came from, and a trader may not publish a review it cannot
+  // show is genuine: that is a banned practice under the Unfair Commercial
+  // Practices Directive as amended by the Omnibus Directive (Annex I, points
+  // 23b-23c), transposed in kuluttajansuojalaki 2 luku. Self-serving review
+  // markup on a business's own page is also ineligible for Google rich results
+  // and risks a manual action.
+  //
+  // Ratings belong on the platforms that verify them. `sameAs` above already
+  // points Google at the profiles it can read ratings from itself, and the
+  // Reviews section links to the deli's real Tripadvisor listing.
 };

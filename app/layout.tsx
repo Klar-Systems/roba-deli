@@ -92,6 +92,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(restaurantJsonLd) }}
         />
         {children}
+        {/*
+          Vercel Analytics is cookieless and stores nothing on the visitor's
+          device, which is why this site needs no consent banner. It is named as
+          a processor in the privacy policy (lib/legal.ts) — if it is ever
+          swapped for anything that sets a cookie, that policy and a consent
+          gate have to land in the same change.
+        */}
         <Analytics />
       </body>
     </html>

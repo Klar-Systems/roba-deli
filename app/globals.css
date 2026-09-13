@@ -345,3 +345,34 @@ nav.main .langswitch i{color:var(--line);font-style:normal}
   .smoothie.in .shot,.smoothie.in .shot-wrap{animation:none}
   html{scroll-behavior:auto}
 }
+
+/* Legal-page styling only. These selectors appear on no other page. */
+
+/* ── Legal pages ── */
+.legal{background:var(--ink);min-height:100vh}
+.legal-wrap{max-width:74ch;margin:0 auto;padding:0 26px}
+.legal-top{border-bottom:1px solid var(--line-soft);padding:22px 0}
+.legal-back{color:var(--gold);font-family:var(--font-montserrat);font-size:12.5px;
+  letter-spacing:.1em;text-transform:uppercase}
+.legal-back:hover{text-decoration:underline}
+.legal-body{padding:52px 26px 96px}
+.legal-body h1{font-size:clamp(30px,5vw,44px);line-height:1.15;margin:0 0 12px;color:var(--white)}
+.legal-updated{color:var(--muted);font-size:13.5px;margin:0 0 26px}
+.legal-intro{font-size:17.5px;color:var(--cream);margin:0 0 42px}
+.legal-body h2{font-size:20px;margin:44px 0 14px;color:var(--gold);line-height:1.3}
+.legal-body p{font-size:16px;color:var(--cream);margin:0 0 15px}
+.legal-body b{color:var(--white);font-weight:600}
+.legal-body a{color:var(--gold-2);text-decoration:underline}
+.legal-company dl{display:grid;grid-template-columns:auto 1fr;gap:8px 20px;
+  font-size:15.5px;margin:0}
+.legal-company dt{color:var(--muted);font-family:var(--font-montserrat);font-size:12px;
+  letter-spacing:.08em;text-transform:uppercase;padding-top:3px}
+.legal-company dd{margin:0;color:var(--cream)}
+.legal-nav{margin-top:56px;padding-top:26px;border-top:1px solid var(--line-soft);
+  display:flex;flex-wrap:wrap;gap:8px 22px}
+.legal-nav a{color:var(--gold);font-size:14px;text-decoration:underline}
+.legal-nav a[aria-current="page"]{color:var(--muted);text-decoration:none}
+@media (max-width:560px){
+  .legal-company dl{grid-template-columns:1fr;gap:2px}
+  .legal-company dd{margin-bottom:12px}
+}
