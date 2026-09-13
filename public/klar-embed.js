@@ -105,6 +105,27 @@
          takes card payments — see the note at their use below. */
       collect: 'Nouto tiskiltä. Maksu ravintolassa.',
       table: 'Tuomme annokset pöytään. Maksu ravintolassa.',
+      /* Delivery (0046). `deliver` says the food is coming, never that it is
+         collected, and settles payment at the door for the same reason
+         `collect` names the room — the guest reading it did not reach Stripe. */
+      delivery: 'Kotiinkuljetus',
+      deliver: 'Toimitamme tilauksen osoitteeseesi. Maksu toimituksen yhteydessä.',
+      street: 'Katuosoite',
+      postcode: 'Postinumero',
+      city: 'Kaupunki',
+      deliveryNote: 'Toimitusohje',
+      deliveryNotePlaceholder: 'Esimerkiksi ovikoodi tai kerros',
+      subtotal: 'Välisumma',
+      deliveryFee: 'Kuljetusmaksu',
+      deliversTo: 'Toimitamme postinumeroihin {codes}.',
+      /* Two different sentences on purpose: the hint stands under the total
+         while the basket is big enough, the refusal replaces it when it is not,
+         and the same words in both would read as a rendering fault. */
+      minimumHint: 'Vähimmäistilaus {eur}, kuljetusmaksu ei kerrytä sitä.',
+      belowMinimum: 'Kotiinkuljetuksen vähimmäistilaus on {eur} ilman kuljetusmaksua.',
+      missingAddress: 'Lisää katuosoite, postinumero ja kaupunki.',
+      badPostcode: 'Postinumero on viisi numeroa.',
+      unservedPostcode: 'Emme valitettavasti toimita postinumeroon {code}.',
       orderAgain: 'Tilaa lisää',
       needName: 'Lisää nimi, jotta löydämme tilauksesi.',
       menuLoading: 'Ladataan ruokalistaa…',
@@ -162,7 +183,10 @@
         PAYLOAD_TOO_LARGE: 'Tilaus on liian suuri verkkotilaukseen.',
         /* Reached only if a refusal arrives with no `ordering` block to read a
            reason out of. The specific sentence is always preferred. */
-        ORDERING_CLOSED: 'Emme ota tilauksia juuri nyt.'
+        ORDERING_CLOSED: 'Emme ota tilauksia juuri nyt.',
+        /* Reached only when the 422 carries no `reason` this embed knows —
+           postcode and minimum are answered with their own sentences. */
+        DELIVERY_UNAVAILABLE: 'Tämä ravintola ei toimita ruokaa kotiin. Valitse nouto.'
       }
     },
     en: {
@@ -204,6 +228,21 @@
          takes card payments — see the note at their use below. */
       collect: 'Collect at the counter. Pay at the restaurant.',
       table: 'We will bring it to your table. Pay at the restaurant.',
+      delivery: 'Delivery',
+      deliver: 'We will deliver your order to your address. Pay on delivery.',
+      street: 'Street address',
+      postcode: 'Postal code',
+      city: 'City',
+      deliveryNote: 'Delivery note',
+      deliveryNotePlaceholder: 'A door code or a floor, for example',
+      subtotal: 'Subtotal',
+      deliveryFee: 'Delivery fee',
+      deliversTo: 'We deliver to postcodes {codes}.',
+      minimumHint: 'Minimum order {eur}; the delivery fee does not count towards it.',
+      belowMinimum: 'Delivery needs a food total of at least {eur}, before the delivery fee.',
+      missingAddress: 'Add your street address, postal code and city.',
+      badPostcode: 'A postal code is five digits.',
+      unservedPostcode: "We don't deliver to {code}, sorry.",
       orderAgain: 'Order more',
       needName: 'Add a name so we can find your order.',
       menuLoading: 'Loading the menu…',
@@ -252,7 +291,8 @@
         VALIDATION_ERROR: 'Check the order details.',
         IDEMPOTENCY_CONFLICT: 'This order has already been sent.',
         PAYLOAD_TOO_LARGE: 'The order is too large for online ordering.',
-        ORDERING_CLOSED: 'We are not taking orders right now.'
+        ORDERING_CLOSED: 'We are not taking orders right now.',
+        DELIVERY_UNAVAILABLE: 'This restaurant does not deliver. Choose takeaway.'
       }
     }
   };
@@ -591,6 +631,19 @@
     var orderName = '';
     var orderPhone = '';
     var orderErr = '';
+    /* The tenant's delivery offer as `GET /menu` publishes it on
+       `client.delivery` — { feeCents, minOrderCents, postalCodes } — or null.
+       Null is "no third button": an older API that names no such block, an
+       `enabled` that is anything but true, or a block with no fee or no
+       postcodes all land here, because a fee with no area or an area with no
+       fee is not an offer a guest can act on. The server re-checks every one
+       of these on POST /order and prices the fee itself; this is only what the
+       guest is shown, and when. */
+    var delivery = null;
+    var deliveryStreet = '';
+    var deliveryPostcode = '';
+    var deliveryCity = '';
+    var deliveryNote = '';
     /* The gift card (0067). `giftCode` is what the guest typed; `giftCard` is
        the one the venue accepted ({ code, balanceCents }) or null; `giftMsg`
        is the line under the field and `giftOk` says whether it is a balance
@@ -737,8 +790,21 @@
           '<h3>' + esc(t.cartTitle) + '</h3><p class="klar-muted">' + esc(t.cartEmpty) + '</p>';
         return;
       }
-      /* Clamped the way the server clamps it: min(balance, total). */
-      var giftCents = giftCard ? Math.min(giftCard.balanceCents, total) : 0;
+      /* `delivery` is nulled by menuLoaded when the offer is off, and
+         `fulfilment` is moved off 'delivery' in the same breath, so the two
+         cannot disagree here. */
+      var isDelivery = fulfilment === 'delivery' && !!delivery;
+      var feeCents = isDelivery ? delivery.feeCents : 0;
+      var minimumNote =
+        isDelivery && delivery.minOrderCents > 0
+          ? (total < delivery.minOrderCents ? t.belowMinimum : t.minimumHint).replace(
+              '{eur}',
+              money(delivery.minOrderCents, currency)
+            )
+          : '';
+      /* Clamped the way the server clamps it: min(balance, food + fee) —
+         ordering.ts draws the card down against grandCents. */
+      var giftCents = giftCard ? Math.min(giftCard.balanceCents, total + feeCents) : 0;
       cartWrap.innerHTML =
         '<h3>' + esc(t.cartTitle) + ' · ' + count + '</h3>' +
         cart
@@ -756,15 +822,40 @@
           .join('') +
         /* A takeaway-only restaurant has nothing to choose between. Rendering
            the one option as a button made it look like a second call to action
-           sitting above the real one — so a single option states itself. */
-        (allowsEatIn
+           sitting above the real one — so a single option states itself. The
+           delivery button exists only while `delivery` is non-null. */
+        (allowsEatIn || delivery
           ? '<div class="klar-seg">' +
-            '<button type="button" data-klar-ful="eat_in" class="' +
-            (fulfilment === 'eat_in' ? 'klar-on' : '') + '">' + esc(t.eatIn) + '</button>' +
+            (allowsEatIn
+              ? '<button type="button" data-klar-ful="eat_in" class="' +
+                (fulfilment === 'eat_in' ? 'klar-on' : '') + '">' + esc(t.eatIn) + '</button>'
+              : '') +
             '<button type="button" data-klar-ful="takeaway" class="' +
             (fulfilment === 'takeaway' ? 'klar-on' : '') + '">' + esc(t.takeaway) + '</button>' +
+            (delivery
+              ? '<button type="button" data-klar-ful="delivery" class="' +
+                (fulfilment === 'delivery' ? 'klar-on' : '') + '">' + esc(t.delivery) + '</button>'
+              : '') +
             '</div>'
           : '<p class="klar-only-ful">' + esc(t.takeaway) + '</p>') +
+        /* Where the food goes — drawn only under the delivery choice, and the
+           values kept in state so a quantity change (which redraws the basket)
+           does not wipe a half-typed address. */
+        (isDelivery
+          ? '<div class="klar-field"><label>' + esc(t.street) + '</label>' +
+            '<input type="text" autocomplete="street-address" data-klar="dstreet" value="' +
+            esc(deliveryStreet) + '"></div>' +
+            '<div class="klar-field"><label>' + esc(t.postcode) + '</label>' +
+            '<input type="text" inputmode="numeric" autocomplete="postal-code" data-klar="dpostcode" value="' +
+            esc(deliveryPostcode) + '">' +
+            '<p class="klar-note">' + esc(t.deliversTo.replace('{codes}', delivery.postalCodes.join(', '))) + '</p></div>' +
+            '<div class="klar-field"><label>' + esc(t.city) + '</label>' +
+            '<input type="text" autocomplete="address-level2" data-klar="dcity" value="' +
+            esc(deliveryCity) + '"></div>' +
+            '<div class="klar-field"><label>' + esc(t.deliveryNote) + ' ' + esc(t.optional) + '</label>' +
+            '<input type="text" data-klar="dnote" maxlength="200" placeholder="' +
+            esc(t.deliveryNotePlaceholder) + '" value="' + esc(deliveryNote) + '"></div>'
+          : '') +
         '<div class="klar-field"><label>' + esc(t.name) + '</label>' +
         '<input type="text" autocomplete="name" data-klar="oname" placeholder="' +
         esc(t.namePlaceholder) + '" value="' + esc(orderName) + '"></div>' +
@@ -784,15 +875,31 @@
               : '') +
             '</div>'
           : '') +
+        /* Three lines on a delivery order, one otherwise: the guest pays food
+           plus fee, and a total that quietly grew is the complaint this avoids.
+           The fee is the tenant's own number off GET /menu; the server prices
+           the order again from the same row. */
+        (isDelivery
+          ? '<div class="klar-line"><span class="klar-ln klar-muted">' + esc(t.subtotal) + '</span>' +
+            '<span class="klar-lp">' + esc(money(total, currency)) + '</span></div>' +
+            '<div class="klar-line"><span class="klar-ln klar-muted">' + esc(t.deliveryFee) + '</span>' +
+            '<span class="klar-lp">' + esc(money(delivery.feeCents, currency)) + '</span></div>'
+          : '') +
         '<div class="klar-total"><span class="klar-muted">' + esc(t.total) + '</span>' +
-        '<span class="klar-tv">' + esc(money(total, currency)) + '</span></div>' +
+        '<span class="klar-tv">' + esc(money(total + feeCents, currency)) + '</span></div>' +
         /* A PAYMENT toward the total, so it sits under it: the total stays the
            order's value and the last row is what the guest still hands over. */
         (giftCents > 0
           ? '<div class="klar-gift"><span class="klar-muted">' + esc(t.giftCard) + '</span>' +
             '<span>−' + esc(money(giftCents, currency)) + '</span></div>' +
             '<div class="klar-gift klar-gift-due"><span>' + esc(t.amountDue) + '</span>' +
-            '<span>' + esc(money(total - giftCents, currency)) + '</span></div>'
+            '<span>' + esc(money(total + feeCents - giftCents, currency)) + '</span></div>'
+          : '') +
+        /* The minimum, stated before the guest presses send — against the FOOD
+           total, never the total with the fee in it, the same comparison the
+           server makes. Skipped when the submit error already says the same. */
+        (minimumNote && minimumNote !== orderErr
+          ? '<p class="klar-note">' + esc(minimumNote) + '</p>'
           : '') +
         (orderErr ? '<p class="klar-err">' + esc(orderErr) + '</p>' : '') +
         '<button type="button" class="klar-btn klar-btn-full" data-klar="order-submit"' +
@@ -813,6 +920,22 @@
       allowsEatIn = data.client ? data.client.allowsEatIn !== false : true;
       if (!allowsEatIn) fulfilment = 'takeaway';
       onlinePayment = !!(data.client && data.client.onlinePayment === true);
+      /* `enabled === true` on purpose, like onlinePayment: an offer the payload
+         did not state is one this embed must not draw a button for. */
+      var offer = data.client && data.client.delivery;
+      delivery =
+        offer &&
+        offer.enabled === true &&
+        typeof offer.feeCents === 'number' &&
+        Array.isArray(offer.postalCodes) &&
+        offer.postalCodes.length > 0
+          ? {
+              feeCents: offer.feeCents,
+              minOrderCents: typeof offer.minOrderCents === 'number' ? offer.minOrderCents : 0,
+              postalCodes: offer.postalCodes.map(String)
+            }
+          : null;
+      if (!delivery && fulfilment === 'delivery') fulfilment = allowsEatIn ? 'eat_in' : 'takeaway';
       /* Opt-in, unlike eat-in: a venue that has never sold a gift card must not
          be made to look as if it does. An older API that does not publish the
          flag at all therefore hides the field too. */
@@ -969,12 +1092,18 @@
            the venue's switch would promise a card payment to exactly the guest
            who has no way to make one. The basket note above is the one that
            follows the switch. */
-        '<p class="klar-muted">' + esc(fulfilment === 'takeaway' ? t.collect : t.table) + '</p>' +
+        '<p class="klar-muted">' +
+        esc(fulfilment === 'delivery' ? t.deliver : fulfilment === 'takeaway' ? t.collect : t.table) +
+        '</p>' +
         '<button type="button" class="klar-btn" data-klar="order-again" style="margin-top:20px">' +
         esc(t.orderAgain) + '</button>';
       cart = [];
       orderName = '';
       orderPhone = '';
+      deliveryStreet = '';
+      deliveryPostcode = '';
+      deliveryCity = '';
+      deliveryNote = '';
       orderErr = '';
       giftCode = '';
       giftCard = null;
@@ -1057,24 +1186,70 @@
         renderCart();
         return;
       }
+      /* The delivery arm, checked here so the guest is told which part to
+         change instead of being handed the API's English refusal. POST /order
+         re-checks all of it against the tenant row — this shortens the loop,
+         it does not own the rule. The postcode loses its inner spaces the way
+         normalisePostalCode does server-side, so "00 100" is sent as "00100". */
+      var address = null;
+      if (fulfilment === 'delivery') {
+        if (!delivery) {
+          orderErr = t.codes.DELIVERY_UNAVAILABLE;
+          renderCart();
+          return;
+        }
+        address = {
+          deliveryStreet: deliveryStreet.trim(),
+          deliveryPostalCode: deliveryPostcode.replace(/\s+/g, ''),
+          deliveryCity: deliveryCity.trim()
+        };
+        if (deliveryNote.trim()) address.deliveryNote = deliveryNote.trim();
+        var foodTotal = cart.reduce(function (sum, line) { return sum + line.cents * line.qty; }, 0);
+        if (!address.deliveryStreet || !address.deliveryPostalCode || !address.deliveryCity) {
+          orderErr = t.missingAddress;
+        } else if (!/^\d{5}$/.test(address.deliveryPostalCode)) {
+          orderErr = t.badPostcode;
+        } else if (delivery.postalCodes.indexOf(address.deliveryPostalCode) === -1) {
+          orderErr =
+            t.unservedPostcode.replace('{code}', address.deliveryPostalCode) + ' ' +
+            t.deliversTo.replace('{codes}', delivery.postalCodes.join(', '));
+        } else if (delivery.minOrderCents > 0 && foodTotal < delivery.minOrderCents) {
+          orderErr = t.belowMinimum.replace('{eur}', money(delivery.minOrderCents, currency));
+        }
+        if (orderErr) {
+          renderCart();
+          return;
+        }
+      }
       orderErr = '';
       sending = true;
       renderCart();
       if (!checkoutKey) checkoutKey = newKey();
+      /* The address travels ONLY on the delivery arm. The DB constraint
+         orders_fulfilment_fields refuses an address on a takeaway row, so
+         carrying one over from an abandoned delivery choice would 400 a valid
+         order. */
+      var payload = {
+        guestName: orderName.trim(),
+        guestPhone: orderPhone.trim() || undefined,
+        fulfilmentType: fulfilment,
+        items: cart.map(function (line) {
+          return { menuItemId: line.id, qty: line.qty };
+        }),
+        /* Only a card the lookup accepted; the server re-checks it. */
+        giftCardCode: giftCard ? giftCard.code : undefined
+      };
+      if (address) {
+        payload.deliveryStreet = address.deliveryStreet;
+        payload.deliveryPostalCode = address.deliveryPostalCode;
+        payload.deliveryCity = address.deliveryCity;
+        if (address.deliveryNote) payload.deliveryNote = address.deliveryNote;
+      }
       win
         .fetch(cfg.api + '/api/' + encodeURIComponent(cfg.orderSlug) + '/order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Idempotency-Key': checkoutKey },
-          body: JSON.stringify({
-            guestName: orderName.trim(),
-            guestPhone: orderPhone.trim() || undefined,
-            fulfilmentType: fulfilment,
-            items: cart.map(function (line) {
-              return { menuItemId: line.id, qty: line.qty };
-            }),
-            /* Only a card the lookup accepted; the server re-checks it. */
-            giftCardCode: giftCard ? giftCard.code : undefined
-          })
+          body: JSON.stringify(payload)
         })
         .then(readJson)
         .then(function (result) {
@@ -1116,6 +1291,20 @@
               }
               orderErr = '';
               renderItems();
+              renderCart();
+              return;
+            }
+            /* The 422 the delivery rule answers with. Its `reason` is
+               structured, so the sentence is rebuilt here in the embed's own
+               language — the API's `error` string is Finnish and never printed. */
+            if (result.body && result.body.code === 'DELIVERY_UNAVAILABLE') {
+              var reason = result.body.reason;
+              orderErr =
+                reason === 'postcode' && address
+                  ? t.unservedPostcode.replace('{code}', address.deliveryPostalCode)
+                  : reason === 'below_minimum' && typeof result.body.minOrderCents === 'number'
+                    ? t.belowMinimum.replace('{eur}', money(result.body.minOrderCents, currency))
+                    : t.codes.DELIVERY_UNAVAILABLE;
               renderCart();
               return;
             }
@@ -1244,6 +1433,10 @@
         if (field === 'oname') orderName = event.target.value;
         if (field === 'ophone') orderPhone = event.target.value;
         if (field === 'ogift') giftCode = event.target.value;
+        if (field === 'dstreet') deliveryStreet = event.target.value;
+        if (field === 'dpostcode') deliveryPostcode = event.target.value;
+        if (field === 'dcity') deliveryCity = event.target.value;
+        if (field === 'dnote') deliveryNote = event.target.value;
       });
 
       /* Enter in the code field checks the card; it must never send the order
