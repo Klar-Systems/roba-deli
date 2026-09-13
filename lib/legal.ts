@@ -44,10 +44,13 @@ export const COMPANY = {
   legalName: "SubHub Oy",
   /** Finnish business ID. Required before a consumer places an order. */
   businessId: "3611281-3",
-  /** The company's registered address — the controller's address. Re-read
-   *  from PRH open data on 2026-09-13: the register carries the stair and flat,
-   *  "Pajuniityntie 3 B 33", and the notice names the address as registered. */
-  address: "Pajuniityntie 3 B 33, 00320 Helsinki, Finland",
+  /** The address the pages name for the company. OPERATOR RULING 2026-09-13:
+   *  the registered address in the trade register (a residential flat in
+   *  Etelä-Haaga) stays OFF the public site — every sentence and the facts
+   *  block name the shop instead, which is where a guest or an authority
+   *  reaches the business. The register is public for anyone who needs the
+   *  registered address; the Y-tunnus on every page points at it. */
+  address: "Iso Roobertinkatu 1, 00120 Helsinki, Finland",
   /** The shop itself. content/contact.md, confirmed with the owner. */
   shopAddress: "Iso Roobertinkatu 1, 00120 Helsinki, Finland",
   phone: "+358 50 379 7490",
@@ -95,7 +98,7 @@ const privacyEn: LegalDocument = {
     {
       h: "Who is responsible for your data",
       p: [
-        `The controller is ${C.legalName} (trading as ${C.tradingName}), business ID ${C.businessId}, registered at ${C.address}. The shop itself is at ${C.shopAddress}.`,
+        `The controller is ${C.legalName} (trading as ${C.tradingName}), business ID ${C.businessId}, ${C.shopAddress}.`,
         `Questions about your data: ${CONTACT_EN}.`,
       ],
     },
@@ -212,7 +215,7 @@ const termsEn: LegalDocument = {
     {
       h: "Who you are dealing with",
       p: [
-        `Your contract is with ${C.legalName} (trading as ${C.tradingName}), business ID ${C.businessId}, VAT ${C.vat}, registered at ${C.address}, trading at ${C.shopAddress}. Contact: ${CONTACT_EN}.`,
+        `Your contract is with ${C.legalName} (trading as ${C.tradingName}), business ID ${C.businessId}, VAT ${C.vat}, ${C.shopAddress}. Contact: ${CONTACT_EN}.`,
       ],
     },
     {
@@ -335,7 +338,7 @@ const privacyFi: LegalDocument = {
     {
       h: "Rekisterinpitäjä",
       p: [
-        `Rekisterinpitäjä on ${C.legalName} (markkinointinimi ${C.tradingName}), Y-tunnus ${C.businessId}, rekisteröity osoite ${C.address}. Toimipaikka on ${C.shopAddress}.`,
+        `Rekisterinpitäjä on ${C.legalName} (markkinointinimi ${C.tradingName}), Y-tunnus ${C.businessId}, ${C.shopAddress}.`,
         `Tietojasi koskevat kysymykset: ${CONTACT_FI}.`,
       ],
     },
@@ -450,7 +453,7 @@ const termsFi: LegalDocument = {
     {
       h: "Kenen kanssa asioit",
       p: [
-        `Sopimuksesi on ${C.legalName} (markkinointinimi ${C.tradingName}), Y-tunnus ${C.businessId}, ALV-numero ${C.vat}, rekisteröity osoite ${C.address}, toimipaikka ${C.shopAddress}. Yhteystiedot: ${CONTACT_FI}.`,
+        `Sopimuksesi on ${C.legalName} (markkinointinimi ${C.tradingName}), Y-tunnus ${C.businessId}, ALV-numero ${C.vat}, ${C.shopAddress}. Yhteystiedot: ${CONTACT_FI}.`,
       ],
     },
     {
