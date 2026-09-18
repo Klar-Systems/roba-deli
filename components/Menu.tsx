@@ -167,6 +167,9 @@ export default function Menu({ locale }: { locale: Locale }) {
   /* null = not landed yet, {} = the ordering API is dark. Either way no row has
      a button, so nothing may say the guest can order here. */
   const orderable = byName !== null && Object.keys(byName).length > 0;
+  /* What the embed says is in the basket, from `klar:cart` — the same numbers
+     the + Add buttons carry. */
+  const basketCount = Object.values(qty).reduce((sum, n) => sum + n, 0);
 
   return (
     <section className="menu" id="menu">
@@ -183,8 +186,15 @@ export default function Menu({ locale }: { locale: Locale }) {
             appears with the buttons and disappears with them, so the page never
             invites an order the kitchen cannot take. No `reveal` class: ScrollFX
             observes once on mount, and this box arrives later — it would stay at
-            opacity 0 forever. */}
-        {orderable ? (
+            opacity 0 forever.
+
+            It also goes once the first thing is in the basket: it is an
+            instruction, and a guest who has added a dish has followed it. From
+            then on the bar at the bottom carries the count, the total and the
+            way to the form, so leaving this up would be telling somebody how to
+            do the thing they are already doing. It comes back if they empty the
+            basket again. */}
+        {orderable && basketCount === 0 ? (
           <div className="order-here">
             <b>{t.orderHereTitle}</b>
             <span>{t.orderHereBody}</span>
