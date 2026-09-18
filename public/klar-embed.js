@@ -390,8 +390,12 @@
   /* --------------------------------------------------------------- styles --- */
 
   var CSS = [
+    /* `--klar-err` is a variable and not a literal because this red was picked
+       for a light page: on a dark host panel #a3341f is nearly invisible, and a
+       refusal nobody can read is the same as no refusal. A site restyling the
+       embed sets its own legible red. */
     '.klar-embed{--klar-accent:#111;--klar-on-accent:#fff;--klar-line:#e4e0d8;',
-    '--klar-muted:#6b6357;--klar-radius:12px;color:inherit;font:inherit;text-align:left}',
+    '--klar-muted:#6b6357;--klar-err:#a3341f;--klar-radius:12px;color:inherit;font:inherit;text-align:left}',
     '.klar-embed *{box-sizing:border-box}',
     '.klar-tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}',
     '.klar-tabs button{flex:1 1 160px;padding:12px 16px;border:1px solid var(--klar-line);',
@@ -455,16 +459,20 @@
     'border-color:var(--klar-accent)}',
     '.klar-slots button[disabled]{opacity:.35;cursor:default;text-decoration:line-through}',
     '.klar-muted{color:var(--klar-muted);font-size:.9rem}',
-    '.klar-err{margin:12px 0 0;color:#a3341f;font-size:.9rem}',
+    '.klar-err{margin:12px 0 0;color:var(--klar-err,#a3341f);font-size:.9rem}',
     /* A field the guest still has to fill in: red border and its own line
        underneath, where the eye is, rather than only the summary above the
        button. The time grid has no border of its own, so it gets an outline. */
     '.klar-field.klar-missing input,.klar-field.klar-missing select,' +
-    '.klar-field.klar-missing textarea{border-color:#a3341f;box-shadow:0 0 0 1px #a3341f}',
-    '.klar-field.klar-missing .klar-slots{outline:1px solid #a3341f;outline-offset:6px;' +
-    'border-radius:var(--klar-radius)}',
-    '.klar-field-err{margin:6px 0 0;color:#a3341f;font-size:.85rem}',
+    '.klar-field.klar-missing textarea{border-color:var(--klar-err,#a3341f);' +
+    'box-shadow:0 0 0 1px var(--klar-err,#a3341f)}',
+    '.klar-field.klar-missing .klar-slots{outline:1px solid var(--klar-err,#a3341f);' +
+    'outline-offset:6px;border-radius:var(--klar-radius)}',
+    '.klar-field-err{margin:6px 0 0;color:var(--klar-err,#a3341f);font-size:.85rem}',
     '.klar-field-err:empty{display:none}',
+    /* The mark that says "this one is not optional", before the guest finds out
+       by pressing Send. aria-hidden on the span, aria-required on the input. */
+    '.klar-field label .klar-req{color:var(--klar-err,#a3341f);margin-left:3px}',
     /* "We are shut" is a fact about the restaurant, not the guest's mistake, so
        it is deliberately NOT the red of .klar-err — it is a plain, calm notice
        that still has to be impossible to miss above a menu. */
@@ -749,6 +757,14 @@
     var orderPhone = '';
     var orderEmail = '';
     var orderErr = '';
+    /* Which fields the last press refused, keyed by their `data-klar` name, so
+       the fault is shown AT the field and not only in the line above the button
+       — the booking form's own rule since La Lasagna, 2026-09-13. It lives in
+       state rather than being poked into the DOM because a quantity change
+       redraws this whole panel, and a note written straight into the old markup
+       would vanish with it. Cleared on the next press, and per field the moment
+       the guest types into it. */
+    var orderFieldErr = {};
     /* The tenant's delivery offer as `GET /menu` publishes it on
        `client.delivery` — { feeCents, minOrderCents, postalCodes } — or null.
        Null is "no third button": an older API that names no such block, an
@@ -853,6 +869,22 @@
         .join('');
     }
 
+    /* One field of the order form: its label, whether it must be filled, and
+       whatever the last press said about it. The asterisk is decoration for
+       sighted guests and `aria-required` on the input is what a screen reader
+       reads, so neither audience learns it the hard way — by pressing Send. */
+    function orderField(key, labelText, required, inputHtml) {
+      var err = orderFieldErr[key];
+      return (
+        '<div class="klar-field' + (err ? ' klar-missing' : '') + '">' +
+        '<label>' + esc(labelText) +
+        (required ? '<span class="klar-req" aria-hidden="true">*</span>' : '') +
+        '</label>' + inputHtml +
+        (err ? '<p class="klar-field-err">' + esc(err) + '</p>' : '') +
+        '</div>'
+      );
+    }
+
     function renderCart() {
       if (!cartWrap) return;
       var count = cart.reduce(function (sum, line) { return sum + line.qty; }, 0);
@@ -943,31 +975,32 @@
            values kept in state so a quantity change (which redraws the basket)
            does not wipe a half-typed address. */
         (isDelivery
-          ? '<div class="klar-field"><label>' + esc(t.street) + '</label>' +
-            '<input type="text" autocomplete="street-address" data-klar="dstreet" value="' +
-            esc(deliveryStreet) + '"></div>' +
-            '<div class="klar-field"><label>' + esc(t.postcode) + '</label>' +
-            '<input type="text" inputmode="numeric" autocomplete="postal-code" data-klar="dpostcode" value="' +
-            esc(deliveryPostcode) + '">' +
-            '<p class="klar-note">' + esc(t.deliversTo.replace('{codes}', delivery.postalCodes.join(', '))) + '</p></div>' +
-            '<div class="klar-field"><label>' + esc(t.city) + '</label>' +
-            '<input type="text" autocomplete="address-level2" data-klar="dcity" value="' +
-            esc(deliveryCity) + '"></div>' +
-            '<div class="klar-field"><label>' + esc(t.deliveryNote) + ' ' + esc(t.optional) + '</label>' +
-            '<input type="text" data-klar="dnote" maxlength="200" placeholder="' +
-            esc(t.deliveryNotePlaceholder) + '" value="' + esc(deliveryNote) + '"></div>'
+          ? orderField('dstreet', t.street, true,
+              '<input type="text" required aria-required="true" autocomplete="street-address" data-klar="dstreet" value="' +
+              esc(deliveryStreet) + '">') +
+            orderField('dpostcode', t.postcode, true,
+              '<input type="text" required aria-required="true" inputmode="numeric" autocomplete="postal-code" data-klar="dpostcode" value="' +
+              esc(deliveryPostcode) + '">' +
+              '<p class="klar-note">' + esc(t.deliversTo.replace('{codes}', delivery.postalCodes.join(', '))) + '</p>') +
+            orderField('dcity', t.city, true,
+              '<input type="text" required aria-required="true" autocomplete="address-level2" data-klar="dcity" value="' +
+              esc(deliveryCity) + '">') +
+            orderField('dnote', t.deliveryNote + ' ' + t.optional, false,
+              '<input type="text" data-klar="dnote" maxlength="200" placeholder="' +
+              esc(t.deliveryNotePlaceholder) + '" value="' + esc(deliveryNote) + '">')
           : '') +
-        '<div class="klar-field"><label>' + esc(t.name) + '</label>' +
-        '<input type="text" autocomplete="name" data-klar="oname" placeholder="' +
-        esc(t.namePlaceholder) + '" value="' + esc(orderName) + '"></div>' +
+        orderField('oname', t.name, true,
+          '<input type="text" required aria-required="true" autocomplete="name" data-klar="oname" placeholder="' +
+          esc(t.namePlaceholder) + '" value="' + esc(orderName) + '">') +
         /* Phone and email are both required (F-001, 2026-09-15): the phone lets the
            kitchen call, the email carries the receipt. POST /order refuses either
            missing. */
-        '<div class="klar-field"><label>' + esc(t.phone) + '</label>' +
-        '<input type="tel" autocomplete="tel" data-klar="ophone" value="' + esc(orderPhone) + '"></div>' +
-        '<div class="klar-field"><label>' + esc(t.email) + '</label>' +
-        '<input type="email" autocomplete="email" data-klar="oemail" placeholder="' +
-        esc(t.emailPlaceholder) + '" value="' + esc(orderEmail) + '"></div>' +
+        orderField('ophone', t.phone, true,
+          '<input type="tel" required aria-required="true" autocomplete="tel" data-klar="ophone" value="' +
+          esc(orderPhone) + '">') +
+        orderField('oemail', t.email, true,
+          '<input type="email" required aria-required="true" autocomplete="email" data-klar="oemail" placeholder="' +
+          esc(t.emailPlaceholder) + '" value="' + esc(orderEmail) + '">') +
         /* Three lines on a delivery order, one otherwise: the guest pays food
            plus fee, and a total that quietly grew is the complaint this avoids.
            The fee is the tenant's own number off GET /menu; the server prices
@@ -1218,6 +1251,25 @@
       });
     }
 
+    /* Take the guest to the first field the press refused. Wrapped because
+       scrollIntoView options are ignored on older Safari, where the plain call
+       is still correct, and focus() is given preventScroll so the two do not
+       fight each other. */
+    function focusFirstOrderProblem() {
+      var first = cartWrap.querySelector('.klar-field.klar-missing input');
+      if (!first) return;
+      try {
+        first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } catch (error) {
+        first.scrollIntoView();
+      }
+      try {
+        first.focus({ preventScroll: true });
+      } catch (error) {
+        first.focus();
+      }
+    }
+
     function placeOrder() {
       if (sending) return;
       /* A refusal from the previous press must not outlive the guest's
@@ -1225,24 +1277,24 @@
          "we do not deliver to 00900" line after it was fixed to 00120, and the
          order could not be placed until the page was reloaded. */
       orderErr = '';
-      if (!orderName.trim()) {
-        orderErr = t.needName;
-        renderCart();
-        return;
-      }
-      if (!orderPhone.trim()) {
-        orderErr = t.needPhone;
-        renderCart();
-        return;
-      }
+      orderFieldErr = {};
+      /* Every fault at once, not the first one. Three presses to learn that
+         three fields were empty is the same loop the booking form was fixed
+         out of: the guest fills one, presses, and is told about the next. */
+      if (!orderName.trim()) orderFieldErr.oname = t.needName;
+      if (!orderPhone.trim()) orderFieldErr.ophone = t.needPhone;
       if (!orderEmail.trim()) {
-        orderErr = t.needEmail;
-        renderCart();
-        return;
+        orderFieldErr.oemail = t.needEmail;
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(orderEmail.trim())) {
+        orderFieldErr.oemail = t.badEmail;
       }
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(orderEmail.trim())) {
-        orderErr = t.badEmail;
+      if (orderFieldErr.oname || orderFieldErr.ophone || orderFieldErr.oemail) {
+        /* The line above the button keeps saying something, for the guest who
+           is looking at it rather than at the field, and it says the first
+           fault so a one-field slip reads exactly as it did before. */
+        orderErr = orderFieldErr.oname || orderFieldErr.ophone || orderFieldErr.oemail;
         renderCart();
+        focusFirstOrderProblem();
         return;
       }
       /* The delivery arm, checked here so the guest is told which part to
@@ -1266,17 +1318,27 @@
         var foodTotal = cart.reduce(function (sum, line) { return sum + line.cents * line.qty; }, 0);
         if (!address.deliveryStreet || !address.deliveryPostalCode || !address.deliveryCity) {
           orderErr = t.missingAddress;
+          /* Marked one by one, so an address with two of the three filled in
+             points at the empty one rather than at all of them. */
+          if (!address.deliveryStreet) orderFieldErr.dstreet = t.missingAddress;
+          if (!address.deliveryPostalCode) orderFieldErr.dpostcode = t.missingAddress;
+          if (!address.deliveryCity) orderFieldErr.dcity = t.missingAddress;
         } else if (!/^\d{5}$/.test(address.deliveryPostalCode)) {
           orderErr = t.badPostcode;
+          orderFieldErr.dpostcode = t.badPostcode;
         } else if (delivery.postalCodes.indexOf(address.deliveryPostalCode) === -1) {
           orderErr =
             t.unservedPostcode.replace('{code}', address.deliveryPostalCode) + ' ' +
             t.deliversTo.replace('{codes}', delivery.postalCodes.join(', '));
+          orderFieldErr.dpostcode = t.unservedPostcode.replace('{code}', address.deliveryPostalCode);
         } else if (delivery.minOrderCents > 0 && foodTotal < delivery.minOrderCents) {
+          /* Not a field's fault — the basket is too small — so this one stays
+             in the line above the button and marks nothing. */
           orderErr = t.belowMinimum.replace('{eur}', money(delivery.minOrderCents, currency));
         }
         if (orderErr) {
           renderCart();
+          focusFirstOrderProblem();
           return;
         }
       }
@@ -1471,6 +1533,19 @@
         if (field === 'dpostcode') deliveryPostcode = event.target.value;
         if (field === 'dcity') deliveryCity = event.target.value;
         if (field === 'dnote') deliveryNote = event.target.value;
+        /* A refusal must not outlive the correction — the postcode bug of
+           2026-09-13, one field down. The note is taken out of the live DOM
+           rather than by redrawing, because redrawing mid-keystroke would take
+           the guest's cursor with it. */
+        if (field && orderFieldErr[field]) {
+          delete orderFieldErr[field];
+          var box = event.target.closest ? event.target.closest('.klar-field') : null;
+          if (box) {
+            box.classList.remove('klar-missing');
+            var note = box.querySelector('.klar-field-err');
+            if (note) note.remove();
+          }
+        }
       });
 
       renderCart();

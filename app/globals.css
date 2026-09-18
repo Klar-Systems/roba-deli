@@ -173,6 +173,12 @@ section{position:relative;padding:108px 0;z-index:1}
 .order{background:var(--ink-2);padding-top:0}
 .order .sec-head{margin-bottom:38px}
 .order-panel{max-width:520px;margin:0 auto}
+/* The embed's own red (#a3341f) was chosen for a light page and all but
+   disappears on this one, and a refusal nobody can read is no refusal. The
+   compound selector is deliberate: the embed adds .klar-embed to THIS element
+   (the mount is .order-panel itself), and it declares the variable there, so a
+   descendant selector matches nothing and a plain .order-panel rule loses. */
+.order-panel.klar-embed{--klar-err:#ff8d7a}
 .order-panel .klar-cart{border:1px solid var(--line);background:var(--ink-3);padding:26px;border-radius:2px}
 .order-panel .klar-cart h3{font-family:var(--font-montserrat);font-weight:600;font-size:13px;letter-spacing:.12em;
   text-transform:uppercase;color:var(--gold);margin:0 0 16px}
