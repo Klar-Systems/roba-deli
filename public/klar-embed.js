@@ -72,7 +72,17 @@
   var DEFAULT_API = 'https://booking.klarsystems.com';
   var LOCAL_API = 'http://localhost:3001';
   var PARTY_MAX_DEFAULT = 12;
-  var BOOKING_HORIZON_DAYS = 90; /* the API's ceiling */
+  /* How far ahead this venue takes bookings. NOT a constant any more: the
+     server serves it as `booking_horizon_days` on every availability answer
+     and this is set from there (FUCKUP-LOG G-004, ruled 2026-09-17 —
+     per-tenant, default 180, cap 365). The literal 90 that used to sit here
+     was one of four copies of the same number across two apps and this file;
+     on 2026-09-15 they together made 2026-12-14 the last bookable date at
+     every venue, so every pikkujoulu from 15 December was greyed out with no
+     record of a single guest who tried. Null until the first availability
+     answer arrives: no ceiling on the picker, and the server refuses a date
+     beyond the horizon, which is one behaviour rather than a fifth copy. */
+  var bookingHorizonDays = null;
 
   /* Where this file was served from, captured HERE and not in boot():
    * document.currentScript is only set while the script executes synchronously,
@@ -103,6 +113,11 @@
       name: 'Nimi',
       namePlaceholder: 'Nimi tilausta varten',
       phone: 'Puhelin',
+      email: 'Sähköposti',
+      emailPlaceholder: 'nimi@esimerkki.fi',
+      needPhone: 'Lisää puhelinnumero, jotta ravintola voi soittaa tilauksestasi.',
+      needEmail: 'Lisää sähköpostiosoite, niin lähetämme kuitin.',
+      badEmail: 'Tarkista sähköpostiosoite.',
       optional: '(vapaaehtoinen)',
       total: 'Yhteensä',
       send: 'Lähetä tilaus',
@@ -219,6 +234,28 @@
         /* Reached only when the 422 carries no `reason` this embed knows —
            postcode and minimum are answered with their own sentences. */
         DELIVERY_UNAVAILABLE: 'Tämä ravintola ei toimita ruokaa kotiin. Valitse nouto.'
+      },
+      /* Booking refusals, kept apart from `codes` because the two surfaces give
+         the SAME code different meanings — VALIDATION_ERROR is a bad cart on an
+         order and a bad form on a booking. A code that is our fault rather than
+         the guest's is deliberately absent: it falls through to the generic
+         sentence plus the phone number, which is the only thing that helps. */
+      bookCodes: {
+        SLOT_TAKEN: 'Tämä aika ehdittiin juuri varata. Valitse toinen aika.',
+        TABLE_OCCUPIED: 'Tämä aika ehdittiin juuri varata. Valitse toinen aika.',
+        DUPLICATE_BOOKING: 'Sinulla on jo varaus tälle päivälle.',
+        VALIDATION_ERROR: 'Tarkista varauksen tiedot.'
+      },
+      /* Per-field refusals, keyed by the field the server names. Same rule as
+         `codes`: the key is read, the server's sentence never is. */
+      bookFields: {
+        guest_name: 'Tarkista nimi.',
+        guest_email: 'Tarkista sähköpostiosoite.',
+        party_size: 'Tarkista seurueen koko.',
+        date: 'Tarkista päivämäärä.',
+        time_slot: 'Valitse aika.',
+        special_requests: 'Toive on liian pitkä.',
+        dietary_notes: 'Allergiatieto on liian pitkä.'
       }
     },
     en: {
@@ -233,6 +270,11 @@
       name: 'Name',
       namePlaceholder: 'Name for the order',
       phone: 'Phone',
+      email: 'Email',
+      emailPlaceholder: 'name@example.com',
+      needPhone: 'Add a phone number so the restaurant can call you about your order.',
+      needEmail: 'Add an email address so we can send your receipt.',
+      badEmail: 'Check the email address.',
       optional: '(optional)',
       total: 'Total',
       send: 'Send order',
@@ -326,6 +368,21 @@
         PAYLOAD_TOO_LARGE: 'The order is too large for online ordering.',
         ORDERING_CLOSED: 'We are not taking orders right now.',
         DELIVERY_UNAVAILABLE: 'This restaurant does not deliver. Choose takeaway.'
+      },
+      bookCodes: {
+        SLOT_TAKEN: 'That time was just taken. Please pick another.',
+        TABLE_OCCUPIED: 'That time was just taken. Please pick another.',
+        DUPLICATE_BOOKING: 'You already have a booking for this day.',
+        VALIDATION_ERROR: 'Check the booking details.'
+      },
+      bookFields: {
+        guest_name: 'Check the name.',
+        guest_email: 'Check the email address.',
+        party_size: 'Check the number of guests.',
+        date: 'Check the date.',
+        time_slot: 'Pick a time.',
+        special_requests: 'The request note is too long.',
+        dietary_notes: 'The allergy note is too long.'
       }
     }
   };
@@ -690,6 +747,7 @@
     var sending = false;
     var orderName = '';
     var orderPhone = '';
+    var orderEmail = '';
     var orderErr = '';
     /* The tenant's delivery offer as `GET /menu` publishes it on
        `client.delivery` — { feeCents, minOrderCents, postalCodes } — or null.
@@ -902,8 +960,14 @@
         '<div class="klar-field"><label>' + esc(t.name) + '</label>' +
         '<input type="text" autocomplete="name" data-klar="oname" placeholder="' +
         esc(t.namePlaceholder) + '" value="' + esc(orderName) + '"></div>' +
-        '<div class="klar-field"><label>' + esc(t.phone) + ' ' + esc(t.optional) + '</label>' +
+        /* Phone and email are both required (F-001, 2026-09-15): the phone lets the
+           kitchen call, the email carries the receipt. POST /order refuses either
+           missing. */
+        '<div class="klar-field"><label>' + esc(t.phone) + '</label>' +
         '<input type="tel" autocomplete="tel" data-klar="ophone" value="' + esc(orderPhone) + '"></div>' +
+        '<div class="klar-field"><label>' + esc(t.email) + '</label>' +
+        '<input type="email" autocomplete="email" data-klar="oemail" placeholder="' +
+        esc(t.emailPlaceholder) + '" value="' + esc(orderEmail) + '"></div>' +
         /* Three lines on a delivery order, one otherwise: the guest pays food
            plus fee, and a total that quietly grew is the complaint this avoids.
            The fee is the tenant's own number off GET /menu; the server prices
@@ -1139,6 +1203,7 @@
       cart = [];
       orderName = '';
       orderPhone = '';
+      orderEmail = '';
       deliveryStreet = '';
       deliveryPostcode = '';
       deliveryCity = '';
@@ -1162,6 +1227,21 @@
       orderErr = '';
       if (!orderName.trim()) {
         orderErr = t.needName;
+        renderCart();
+        return;
+      }
+      if (!orderPhone.trim()) {
+        orderErr = t.needPhone;
+        renderCart();
+        return;
+      }
+      if (!orderEmail.trim()) {
+        orderErr = t.needEmail;
+        renderCart();
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(orderEmail.trim())) {
+        orderErr = t.badEmail;
         renderCart();
         return;
       }
@@ -1210,7 +1290,8 @@
          order. */
       var payload = {
         guestName: orderName.trim(),
-        guestPhone: orderPhone.trim() || undefined,
+        guestPhone: orderPhone.trim(),
+        guestEmail: orderEmail.trim(),
         fulfilmentType: fulfilment,
         items: cart.map(function (line) {
           return { menuItemId: line.id, qty: line.qty };
@@ -1385,6 +1466,7 @@
         var field = event.target.dataset ? event.target.dataset.klar : null;
         if (field === 'oname') orderName = event.target.value;
         if (field === 'ophone') orderPhone = event.target.value;
+        if (field === 'oemail') orderEmail = event.target.value;
         if (field === 'dstreet') deliveryStreet = event.target.value;
         if (field === 'dpostcode') deliveryPostcode = event.target.value;
         if (field === 'dcity') deliveryCity = event.target.value;
@@ -1409,9 +1491,59 @@
        second rule to disagree with the server's. */
     var depositRule = null;
 
+    /* The sentence a guest reads when a booking is refused, built from the
+       server's CODE and FIELD NAMES — never from `body.error` or the
+       server's own field sentences. Those are written in one language and
+       this embed renders in the site's, which is how an English venue's
+       guest was shown "Tämä aika on juuri varattu". Same rule the ordering
+       path has followed since it hit the identical bug. An unmapped code is
+       our fault rather than the guest's, so it gets the generic sentence and
+       the phone number instead of a translation nobody wrote. */
+    function bookErrText(body) {
+      var named = [];
+      var fields = body && body.fields;
+      if (fields) {
+        Object.keys(fields).forEach(function (key) {
+          var text = key === 'guest_phone' ? t.badPhone : t.bookFields[key];
+          if (text && named.indexOf(text) === -1) named.push(text);
+        });
+      }
+      if (named.length) return named.join(' · ');
+      var byCode = body && t.bookCodes[body.code];
+      return byCode || t.generic + callUs();
+    }
+
     function showBookErr(message) {
       bookErrEl.textContent = message;
       bookErrEl.hidden = !message;
+    }
+
+    /* Every stop this form makes is a row Klar can count. A guest who was
+       refused in the browser — a field left empty, a time the grid dropped,
+       an API that never answered — used to leave nothing anywhere: no request,
+       no row, no bell (La Lasagna, 2026-09-13; AUDIT-2026-09 F-002). So the
+       form now says so, to the same endpoint the hosted widget's funnel uses:
+       `form_blocked` with the NAMES of the fields it refused on, `widget_failed`
+       with why, `booking_failed` with the server's status and code. Never what
+       the guest typed — the server drops anything else anyway.
+
+       Fire-and-forget: keepalive so a beacon sent as the page is left still
+       goes, and every failure swallowed. A booking must never fail, slow down
+       or show an error because a counter did not get through. */
+    var funnelSession = 'klar-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+    function track(type, meta) {
+      try {
+        win
+          .fetch(cfg.api + '/api/' + encodeURIComponent(cfg.bookSlug) + '/widget-events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            keepalive: true,
+            body: JSON.stringify({ session_id: funnelSession, event_type: type, metadata: meta || {} })
+          })
+          .catch(function () {});
+      } catch (error) {
+        /* a counter that cannot be sent is not a fault the guest should see */
+      }
     }
 
     /* A fault is shown AT the field, not only in the line above the button.
@@ -1524,6 +1656,13 @@
              the widget without a redeploy. */
           depositRule = data.deposit || null;
           renderDeposit();
+          /* The horizon travels with availability for the same reason the
+             deposit rule does: one call every widget already makes, and a
+             venue that changes it reaches the picker without a redeploy. */
+          if (typeof data.booking_horizon_days === 'number') {
+            bookingHorizonDays = data.booking_horizon_days;
+            if (dateEl) dateEl.max = plusDays(todayIn(cfg.timezone), bookingHorizonDays);
+          }
           var slots = data.slots || [];
           if (slots.length === 0) {
             slotsEl.innerHTML = '<span class="klar-muted">' + esc(t.closed) + '</span>';
@@ -1557,6 +1696,8 @@
               ' — no times can be offered.',
             error
           );
+          var failed = /availability (\d+)$/.exec(String(error && error.message));
+          track('widget_failed', { reason: 'availability', status: failed ? Number(failed[1]) : 0 });
           slotsEl.innerHTML =
             '<span class="klar-muted">' +
             esc((/ 404$/.test(error.message) ? t.bookingOff : t.slotsFailed) + callUs()) +
@@ -1608,7 +1749,7 @@
     if (cfg.book) {
       var today = todayIn(cfg.timezone);
       dateEl.min = today;
-      dateEl.max = plusDays(today, BOOKING_HORIZON_DAYS);
+      if (bookingHorizonDays !== null) dateEl.max = plusDays(today, bookingHorizonDays);
       dateEl.value = today;
       for (var size = 1; size <= cfg.partyMax; size++) {
         var option = doc.createElement('option');
@@ -1667,21 +1808,25 @@
         var requests = el('breq').value.trim();
         var diet = el('bdiet').value.trim();
         var dietConsent = el('bdiet-consent').checked;
+        /* The fourth column is the field's name for the beacon — the same word
+           on every form we serve, so "phone ×3" means the same thing whichever
+           site it came from. */
         var required = [
-          [!dateEl.value, dateEl, t.needDate],
-          [!chosenSlot, slotsEl, t.needTime],
-          [!name, el('bname'), t.needName],
-          [!phone, el('bphone'), t.needPhone],
-          [!email, el('bemail'), t.needEmail]
+          [!dateEl.value, dateEl, t.needDate, 'date'],
+          [!chosenSlot, slotsEl, t.needTime, 'time'],
+          [!name, el('bname'), t.needName, 'name'],
+          [!phone, el('bphone'), t.needPhone, 'phone'],
+          [!email, el('bemail'), t.needEmail, 'email']
         ];
-        var incomplete = false;
+        var missing = [];
         required.forEach(function (row) {
           markField(row[1], row[0] ? row[2] : '');
-          if (row[0]) incomplete = true;
+          if (row[0]) missing.push(row[3]);
         });
-        if (incomplete) {
+        if (missing.length) {
           showBookErr(t.bookFields);
           focusFirstMissing(required);
+          track('form_blocked', { fields: missing });
           return;
         }
         /* Refused here as well as on the server. The server is what makes it
@@ -1689,6 +1834,7 @@
            being turned away in the form costs the guest nothing. */
         if (diet && !dietConsent) {
           showBookErr(t.dietaryConsentMissing);
+          track('form_blocked', { fields: ['diet_consent'] });
           return;
         }
         showBookErr('');
@@ -1704,6 +1850,12 @@
           dietary_notes: diet || undefined,
           health_consent: diet ? dietConsent : undefined,
           health_consent_language: cfg.locale,
+          /* The language this guest booked in. The server stores it on the row
+             and picks the CONFIRMATION MAIL's language from it, defaulting to
+             Finnish when it is absent — so leaving it out sent English venues'
+             guests a Finnish confirmation. Measured on La Lasagna 2026-09-15:
+             22 of 22 rows had `language` null against an `en` embed. */
+          language: cfg.locale,
           source: 'widget'
         };
 
@@ -1731,12 +1883,18 @@
           .fetch(cfg.api + '/api/' + encodeURIComponent(cfg.bookSlug) + '/book/deposit', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              date: payload.date,
-              time_slot: payload.time_slot,
-              party_size: payload.party_size,
-              return_url: win.location.href.split('#')[0]
-            })
+            /* The WHOLE booking, not just the slot (G-012). The server runs
+               every refusal against it before it opens a payment page, so a
+               typo in the phone number, an over-long allergy note or a booking
+               that has slipped inside the venue's lead time is answered here —
+               for free — instead of after the guest has paid for it. Nothing
+               extra is stored: this is the same payload /book receives a minute
+               later, sent a minute earlier. */
+            body: JSON.stringify(
+              Object.assign({}, payload, {
+                return_url: win.location.href.split('#')[0]
+              })
+            )
           })
           .then(readJson)
           .then(function (result) {
@@ -1745,7 +1903,8 @@
               bookBtn.disabled = false;
               renderDeposit();
               warn('deposit session refused for "' + cfg.bookSlug + '".', result.body);
-              showBookErr(result.body.error || t.generic + callUs());
+              track('booking_failed', { status: result.status, error_code: result.body.code || null, form: 'deposit' });
+              showBookErr(bookErrText(result.body));
               if (result.body.code === 'SLOT_TAKEN') loadSlots();
               return;
             }
@@ -1761,6 +1920,7 @@
               bookBtn.disabled = false;
               renderDeposit();
               warn('the booking could not be held across the payment.', storageError);
+              track('widget_failed', { reason: 'deposit_hold' });
               showBookErr(t.generic + callUs());
               return;
             }
@@ -1771,6 +1931,7 @@
             bookBtn.disabled = false;
             renderDeposit();
             warn('deposit request failed for "' + cfg.bookSlug + '".', error);
+            track('widget_failed', { reason: 'deposit_network' });
             showBookErr(t.generic + callUs());
           });
       }
@@ -1802,27 +1963,14 @@
             renderDeposit();
             if (!result.ok) {
               warn('booking rejected for "' + cfg.bookSlug + '" (' + result.status + ').', result.body);
-              /* The API returns per-field messages — show them, they are more
-               * useful than the summary. */
-              var fields = result.body.fields;
-              var detail = fields
-                ? Object.keys(fields)
-                    .map(function (key) {
-                      return /invalid phone/i.test(fields[key]) ? t.badPhone : fields[key];
-                    })
-                    .join(' · ')
-                : '';
+              track('booking_failed', { status: result.status, error_code: result.body.code || null });
               /* A deposit that could not be honoured says so in the guest's own
                  terms, including the fact that the money comes back — the
                  server's code is precise but it is written for us, not them. */
               var depositProblem =
                 typeof result.body.code === 'string' &&
                 result.body.code.indexOf('DEPOSIT_') === 0;
-              showBookErr(
-                depositProblem
-                  ? t.depositFailed + callUs()
-                  : detail || result.body.error || t.generic + callUs()
-              );
+              showBookErr(depositProblem ? t.depositFailed + callUs() : bookErrText(result.body));
               if (result.body.code === 'SLOT_TAKEN') loadSlots();
               return;
             }
@@ -1833,6 +1981,7 @@
             bookBtn.disabled = false;
             renderDeposit();
             warn('booking request failed for "' + cfg.bookSlug + '".', error);
+            track('widget_failed', { reason: 'book_network' });
             showBookErr(t.generic + callUs());
           });
       }
@@ -1874,6 +2023,7 @@
              and nothing is charged twice; the venue is the only one who can
              sort it out, so the guest is pointed at them. */
           warn('returned from a deposit payment with no held booking.', sessionId);
+          track('widget_failed', { reason: 'deposit_return_lost' });
           showBookErr(t.depositFailed + callUs());
           return true;
         }
