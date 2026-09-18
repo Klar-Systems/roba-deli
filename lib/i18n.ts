@@ -70,6 +70,8 @@ export const dict = {
       titleEm: "made to order",
       fav: "★ Favorite",
       add: "+ Add",
+      /* Only ever read aloud — the button itself is a minus sign. */
+      removeOne: "Remove one",
       orderHereTitle: "Order right here",
       orderHereBody: "Tap + Add next to any dish — your order builds at the bottom of this page.",
       orderEyebrow: "Order online",
@@ -177,6 +179,7 @@ export const dict = {
       titleEm: "tilauksesta valmistettu",
       fav: "★ Suosikki",
       add: "+ Lisää",
+      removeOne: "Poista yksi",
       orderHereTitle: "Tilaa suoraan tästä",
       orderHereBody: "Paina + Lisää ruoan kohdalla — tilauksesi kootaan tämän sivun alaosaan.",
       orderEyebrow: "Tilaa verkossa",

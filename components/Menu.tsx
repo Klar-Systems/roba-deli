@@ -22,7 +22,10 @@ import { dict, type Locale } from "@/lib/i18n";
  */
 
 type ApiItem = { id: string; name: string; priceCents: number; available?: boolean };
-type Portion = { label: string; apiName: string };
+/* `size` is what the stepper shows once a portion is in the basket: "S · 2".
+   It is null on an item sold in one size, where the count alone is the whole
+   truth and "+ Add · 2" would be a button pretending to be a readout. */
+type Portion = { label: string; apiName: string; size: string | null };
 
 function portions(item: MenuItem, addLabel: string): Portion[] {
   if (item.price12) {
@@ -30,11 +33,11 @@ function portions(item: MenuItem, addLabel: string): Portion[] {
       /* The "+" is load-bearing: a bare "L" is the same glyph, size and box as
          the lactose-free flag two columns to the left, so it read as a badge and
          nobody pressed it. */
-      { label: "+ S", apiName: `${item.name} (S)` },
-      { label: "+ L", apiName: `${item.name} (L)` },
+      { label: "+ S", apiName: `${item.name} (S)`, size: "S" },
+      { label: "+ L", apiName: `${item.name} (L)`, size: "L" },
     ];
   }
-  return [{ label: addLabel, apiName: item.orderName ?? item.name }];
+  return [{ label: addLabel, apiName: item.orderName ?? item.name, size: null }];
 }
 
 /* "17,90 €" — the same shape lib/data.ts prints, so a live price and a static
@@ -155,13 +158,16 @@ export default function Menu({ locale }: { locale: Locale }) {
     };
   }, [t.add]);
 
-  const add = useCallback((id: string) => {
+  /* `klar:add` takes a signed step — the embed documents qty as "defaults 1,
+     may be negative" — so removing a portion from the row is the same event as
+     adding one, and the basket stays the embed's to own. */
+  const step = useCallback((id: string, by: number) => {
     const mount = document.querySelector<HTMLElement>("[data-klar-order-slug]");
     if (!mount) {
       console.error("[roba-deli] no Klar order mount on the page — nothing to add to.");
       return;
     }
-    mount.dispatchEvent(new CustomEvent("klar:add", { detail: { id, qty: 1 } }));
+    mount.dispatchEvent(new CustomEvent("klar:add", { detail: { id, qty: by } }));
   }, []);
 
   /* null = not landed yet, {} = the ordering API is dark. Either way no row has
@@ -276,17 +282,45 @@ export default function Menu({ locale }: { locale: Locale }) {
                         <div className="adds">
                           {buttons.map(({ portion, api }) => {
                             const n = qty[api.id] ?? 0;
+                            /* Nothing chosen yet: one button that adds. Once a
+                               portion is in the basket the same slot becomes a
+                               stepper, so taking one back does not mean
+                               scrolling down to the order panel to do it. */
+                            if (n === 0) {
+                              return (
+                                <button
+                                  key={portion.apiName}
+                                  type="button"
+                                  className="add"
+                                  onClick={() => step(api.id, 1)}
+                                  aria-label={`${t.add} ${api.name}`}
+                                >
+                                  {portion.label}
+                                </button>
+                              );
+                            }
                             return (
-                              <button
-                                key={portion.apiName}
-                                type="button"
-                                className={n > 0 ? "add on" : "add"}
-                                onClick={() => add(api.id)}
-                                aria-label={`${t.add} ${api.name}`}
-                              >
-                                {portion.label}
-                                {n > 0 ? ` · ${n}` : ""}
-                              </button>
+                              <span key={portion.apiName} className="add-step">
+                                <button
+                                  type="button"
+                                  className="add on step-down"
+                                  onClick={() => step(api.id, -1)}
+                                  aria-label={`${t.removeOne} ${api.name}`}
+                                >
+                                  −
+                                </button>
+                                <b aria-live="polite">
+                                  {portion.size ? `${portion.size} · ${n}` : n}
+                                </b>
+                                <button
+                                  type="button"
+                                  className="add on step-up"
+                                  onClick={() => step(api.id, 1)}
+                                  aria-label={`${t.add} ${api.name}`}
+                                >
+                                  +
+                                </button>
+                              </span>
                             );
                           })}
                         </div>

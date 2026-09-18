@@ -166,6 +166,15 @@ section{position:relative;padding:108px 0;z-index:1}
   white-space:nowrap;transition:.25s var(--ease)}
 .item .add:hover{border-color:var(--gold);background:rgba(184,164,90,.12);color:#fff}
 .item .add.on{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+/* Once a portion is in the basket the add button becomes a stepper, so one can
+   be taken back here instead of only down in the order panel. It keeps the
+   row's height: the count sits in the same box the button filled. */
+.item .add-step{display:inline-flex;align-items:stretch;border:1px solid var(--gold);background:var(--gold)}
+.item .add-step .add{border:0;background:transparent;color:var(--ink);padding:6px 9px;font-size:13px;line-height:1}
+.item .add-step .add:hover{background:rgba(0,0,0,.14);color:var(--ink)}
+.item .add-step b{font-family:var(--font-montserrat);font-weight:700;font-size:10.5px;letter-spacing:.12em;
+  color:var(--ink);display:flex;align-items:center;padding:0 2px;min-width:26px;justify-content:center;
+  font-variant-numeric:tabular-nums}
 
 /* the cart + checkout — the Klar embed in host-menu mode, in Roba Deli's tokens */
 /* the fixed header would otherwise eat the heading when the cart bar jumps here */
