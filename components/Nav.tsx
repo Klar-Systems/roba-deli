@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { dict, type Locale } from "@/lib/i18n";
+import OrderCta from "@/components/OrderCta";
 
 export default function Nav({ locale }: { locale: Locale }) {
   const t = dict[locale].nav;
@@ -37,7 +38,12 @@ export default function Nav({ locale }: { locale: Locale }) {
             <i>·</i>
             <a href="/fi" className={locale === "fi" ? "on" : ""} onClick={close}>FI</a>
           </span>
-          <a className="btn btn-solid" href="tel:+358503797490" onClick={close}>{t.call}</a>
+          <OrderCta
+            className="btn btn-solid"
+            orderLabel={t.order}
+            fallbackLabel={t.call}
+            onClick={close}
+          />
         </nav>
         <button className="burger" aria-label="Menu" onClick={() => setOpen((o) => !o)}>
           <span></span><span></span><span></span>

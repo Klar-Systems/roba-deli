@@ -18,6 +18,9 @@ export const dict = {
       reviews: "Reviews",
       visit: "Visit",
       call: "Call to order",
+      /* Replaces `call` only once the ordering API has answered with a menu —
+         see components/OrderCta.tsx. */
+      order: "Order online",
     },
     hero: {
       eyebrow: "Iso Roobertinkatu · Helsinki",
@@ -27,6 +30,7 @@ export const dict = {
       intro:
         "Helsinki's newest deli on Iso Roobertinkatu. Hot, fresh, cheesy, made to order, from lunch to late night.",
       cta1: "See the menu",
+      ctaOrder: "Order online",
       cta2: "Visit us",
     },
     about: {
@@ -123,6 +127,7 @@ export const dict = {
       reviews: "Arvostelut",
       visit: "Vieraile",
       call: "Soita ja tilaa",
+      order: "Tilaa verkossa",
     },
     hero: {
       eyebrow: "Iso Roobertinkatu · Helsinki",
@@ -132,6 +137,7 @@ export const dict = {
       intro:
         "Helsingin uusin deli Iso Roobertinkadulla. Kuumaa, tuoretta, juustoista, valmistetaan tilauksesta, lounaasta myöhään iltaan.",
       cta1: "Katso ruokalista",
+      ctaOrder: "Tilaa verkossa",
       cta2: "Vieraile luonamme",
     },
     about: {

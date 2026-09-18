@@ -1,4 +1,5 @@
 import { dict, type Locale } from "@/lib/i18n";
+import OrderCta from "@/components/OrderCta";
 
 export default function Hero({ locale }: { locale: Locale }) {
   const t = dict[locale].hero;
@@ -20,7 +21,9 @@ export default function Hero({ locale }: { locale: Locale }) {
         </h1>
         <p>{t.intro}</p>
         <div className="hero-cta">
-          <a className="btn btn-solid" href="#menu">{t.cta1}</a>
+          {/* Same target either way — #menu is where ordering starts, because
+              the basket is built from the dishes. Only the promise changes. */}
+          <OrderCta className="btn btn-solid" orderLabel={t.ctaOrder} fallbackLabel={t.cta1} fallbackHref="#menu" />
           <a className="btn btn-ghost" href="#visit">{t.cta2}</a>
         </div>
       </div>
