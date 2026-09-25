@@ -1,0 +1,5 @@
+{
+  "_comment": "Read by klar-console's .claude/harness/bin/land.sh when landing this repo. Without commands.test every land was NO-GO ('THE TESTS DID NOT RUN') and each trunk push needed the operator's G12 override. This is a Next app with no test suite and no working lint (`next lint` prompts for a config and eslint is not installed), so the test is the TypeScript check over the whole tree and the build is `next build`.",
+  "project": { "remote": "origin", "default_branch": "main" },
+  "commands": { "test": "npx --no-install tsc --noEmit", "build": "npm run build" }
+}
