@@ -4,23 +4,23 @@ Transcribed from the three menu photos in `content/` (`menu-main.png`, `menu-smo
 `menu-deals.png`). Prices in €. Flags: **L** lactose-free · **G** gluten-free · **LG** both.
 Subs come in **6" / 12"**. Lines marked `⚠` need a quick confirm against the photo.
 
-## Subs
+## Sandwiches (card of 2026-10-23)
 
-| Item | 6" | 12" | Description |
+| Item | S | L | Description |
 |---|---|---|---|
-| Brisket Raclette Melt (signature) | — | **19.90** | Slow-cooked brisket, craft brioche, pickles, syrup & barbecue sauce, molten raclette swiss |
-| Philly Steak Sub (L) | 7.90 | 13.90 | Beef, sautéed peppers, onion & mushroom, provolone & cheddar, sriracha aioli ⚠sauce name |
-| Ultimate Italian | 7.90 | 13.90 | Sourdough focaccia, salami, smoked turkey, provolone, aioli |
-| Grilled Chicken Sub | 7.90 | 13.90 | Grilled corn-fed chicken fillet, fresh veggies, pickles, cheese, house sauce |
-| Gravlax Sub (L) | 7.90 | 13.90 | Salmon gravlax, lemon-dill, mango curry sauce |
-| Halumi Sub | 7.50 | 13.90 | Marinated grilled halloumi, provolone, fresh veggies, muhamara & mango curry sauce |
+| Pastrami Burger (L) | — | **20.59** | Beef pastrami in craft brioche, dijon aioli, bbq sauce, raclette melt cheese and pickles |
+| Philly Cheesesteak (L) | 9.09 | 17.14 | Beef steak with melted provolone cheese, sautéed onion-paprika and cheddar sauce |
+| Ultimate Italian | — | **17.14** | Italian cold cuts, provolone, fresh pesto, roasted vegetables, lettuce, tomatoes and creamy sauce |
+| Grilled Halloumi (L) | 9.09 | 17.14 | Grilled halloumi, provolone, fresh pesto, pickles and sun dried tomatoes |
+| Chicken Sandwich | — | **13.69** | Pulled chicken, choice of bread, apple & fennel slaw, salsa verde, truffle and honey mayonnaise, chilli paprika sauce, crispy onion and parmesan |
+| Ruben Sandwich | — | **24.04** | NY style pastrami slices, sauerkraut, comes with potato crisps and pickles |
 
-## Wraps
+## Wraps & Tacos
 
 | Item | € | Description |
 |---|---|---|
-| Falafel Wrap (L) | 9.90 | Tortilla, cheese, falafel, fresh veggies, pickles, muhamara & tzatziki |
-| Chicken Shawarma Wrap (L) | 9.90 | Tortilla, chicken, fresh veggies, white & cheddar sauce |
+| Chicken Shwarma (L) | 11.39 | Lawash nan, garlic sauce, cheddar sauce, fresh lettuce, cucumber, tomatoes and grilled chicken shawarma |
+| Lamb Taco Birria (L) | 13.69 | 3 corn tortillas filled with slow-cooked lamb shoulder, guacamole, mozzarella, salsa and lime |
 
 ## Salads
 
@@ -58,5 +58,5 @@ Coke / Coke Zero / Fanta / Sprite 3.5 · Ginger Beer 3.5 · Water 3 · Juice 3.5
 
 ## Deals
 
-- **Combo Deal** — 6" sub + soft drink **€8.99**
-- **Duo Deal** — two 12" subs **€23.99** (excl. Brisket Raclette Melt)
+- **Combo Deal** — S sub + soft drink **€8.99**
+- **Duo Deal** — two L subs **€23.99** (excl. Pastrami Burger)
