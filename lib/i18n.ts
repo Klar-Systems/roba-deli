@@ -36,7 +36,7 @@ export const dict = {
       titleEm: "New York deli",
       titlePost: " on Iso Roobertinkatu",
       body:
-        "Roba Deli is Helsinki's newest sandwich deli, handcrafted sandwiches, wraps & provisions built to order at the counter, never pre-wrapped. Real raclette scraped molten over beef pastrami. Fresh-baked craft brioche and sourdough focaccia. Halloumi, falafel, a proper Philly.",
+        "Roba Deli is Helsinki's newest sandwich deli, handcrafted sandwiches, wraps & provisions built to order at the counter, never pre-wrapped. Real raclette scraped molten over beef pastrami. Fresh-baked craft brioche and sourdough focaccia. Halloumi, lamb birria, a proper Philly.",
       proof: [
         "Raclette & cheese melted over the sandwich, to order.",
         "Fresh-baked rolls: craft brioche & sourdough focaccia.",
@@ -51,7 +51,7 @@ export const dict = {
       items: [
         { title: "Fresh-baked rolls", body: "Craft brioche & sourdough focaccia, baked for the bite." },
         { title: "Raclette, melted live", body: "Real cheese scraped molten over the top, to order." },
-        { title: "Real ingredients", body: "Pastrami, halloumi, falafel. A fresh-ingredient bar." },
+        { title: "Real ingredients", body: "Pastrami, halloumi, slow-cooked lamb. A fresh-ingredient bar." },
         { title: "Lunch to late", body: "Your spot from lunch to late night. Weekends till 04:30." },
       ],
     },
@@ -130,7 +130,7 @@ export const dict = {
       titleEm: "New Yorkin deli",
       titlePost: " Iso Roobertinkadulla",
       body:
-        "Roba Deli on Helsingin uusin voileipädeli, käsintehdyt voileivät, wrapit & herkut valmistetaan tilauksesta tiskillä, ei koskaan valmiiksi pakattuina. Aitoa raclettea kaavitaan sulana naudan pastramin päälle. Tuoreena paistettua briochea ja hapanjuurifocacciaa. Halloumia, falafelia, kunnon Philly.",
+        "Roba Deli on Helsingin uusin voileipädeli, käsintehdyt voileivät, wrapit & herkut valmistetaan tilauksesta tiskillä, ei koskaan valmiiksi pakattuina. Aitoa raclettea kaavitaan sulana naudan pastramin päälle. Tuoreena paistettua briochea ja hapanjuurifocacciaa. Halloumia, lammasbirriaa, kunnon Philly.",
       proof: [
         "Raclette & juusto sulatettuna voileivän päälle, tilauksesta.",
         "Tuoreena paistetut sämpylät: brioche & hapanjuurifocaccia.",
@@ -145,7 +145,7 @@ export const dict = {
       items: [
         { title: "Tuoreena paistetut sämpylät", body: "Brioche & hapanjuurifocaccia, paistettu juuri sopiviksi." },
         { title: "Raclette, sulatettuna paikan päällä", body: "Aitoa juustoa kaavittuna sulana päälle, tilauksesta." },
-        { title: "Aidot raaka-aineet", body: "Pastramia, halloumia, falafelia. Tuoreiden raaka-aineiden baari." },
+        { title: "Aidot raaka-aineet", body: "Pastramia, halloumia, haudutettua lammasta. Tuoreiden raaka-aineiden baari." },
         { title: "Lounaasta iltaan", body: "Paikkasi lounaasta myöhään iltaan. Viikonloppuisin klo 04:30 asti." },
       ],
     },
