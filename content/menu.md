@@ -4,23 +4,18 @@ Transcribed from the three menu photos in `content/` (`menu-main.png`, `menu-smo
 `menu-deals.png`). Prices in €. Flags: **L** lactose-free · **G** gluten-free · **LG** both.
 Subs come in **6" / 12"**. Lines marked `⚠` need a quick confirm against the photo.
 
-## Sandwiches (card of 2026-10-23)
+## Sandwiches & Wraps (card of 2026-10-23, in the card's order)
 
 | Item | S | L | Description |
 |---|---|---|---|
-| Pastrami Burger (L) | — | **20.59** | Beef pastrami in craft brioche, dijon aioli, bbq sauce, raclette melt cheese and pickles |
-| Philly Cheesesteak (L) | 9.09 | 17.14 | Beef steak with melted provolone cheese, sautéed onion-paprika and cheddar sauce |
+| Pastrami Burger (L) | — | **20.59** | Beef pastrami in craft brioche, dijon aioli, BBQ sauce, raclette melt cheese and pickles |
+| Grilled Halloumi (L) | 9.09 | 17.14 | Grilled halloumi, provolone, fresh pesto, pickles and sun-dried tomatoes |
 | Ultimate Italian | — | **17.14** | Italian cold cuts, provolone, fresh pesto, roasted vegetables, lettuce, tomatoes and creamy sauce |
-| Grilled Halloumi (L) | 9.09 | 17.14 | Grilled halloumi, provolone, fresh pesto, pickles and sun dried tomatoes |
-| Chicken Sandwich | — | **13.69** | Pulled chicken, choice of bread, apple & fennel slaw, salsa verde, truffle and honey mayonnaise, chilli paprika sauce, crispy onion and parmesan |
-| Ruben Sandwich | — | **24.04** | NY style pastrami slices, sauerkraut, comes with potato crisps and pickles |
-
-## Wraps & Tacos
-
-| Item | € | Description |
-|---|---|---|
-| Chicken Shwarma (L) | 11.39 | Lawash nan, garlic sauce, cheddar sauce, fresh lettuce, cucumber, tomatoes and grilled chicken shawarma |
-| Lamb Taco Birria (L) | 13.69 | 3 corn tortillas filled with slow-cooked lamb shoulder, guacamole, mozzarella, salsa and lime |
+| Chicken Shwarma (L) | — | **11.39** | Lawash nan, garlic sauce, cheddar sauce, fresh lettuce, cucumber, tomatoes and grilled chicken shawarma |
+| Chicken Sandwich | — | **13.69** | Pulled chicken, choice of your bread, apple & fennel slaw, salsa verde, truffle and honey mayonnaise, chilli paprika sauce, crispy onion and parmesan |
+| Lamb Taco Birria (L) | — | **13.69** | 3 corn tortillas filled with slowly cooked lamb shoulder, guacamole, mozzarella, salsa and lime |
+| Philly Cheesesteak (L) | 9.09 | 17.14 | Beef steak with melted provolone cheese, sautéed onion-paprika and cheddar sauce |
+| Ruben Sandwich | — | **24.04** | NY style pastrami slice, sauerkraut and comes with potato crisps and pickles |
 
 ## Salads
 

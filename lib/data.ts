@@ -16,23 +16,18 @@ export type MenuCategory = { name: string; nameFi: string; items: MenuItem[] };
 
 export const MENU: MenuCategory[] = [
   {
-    name: "Sandwiches",
-    nameFi: "Voileivät",
+    // The in-store card of 2026-10-23: one board of eight, in the card's order, its wording kept.
+    name: "Sandwiches & Wraps",
+    nameFi: "Voileivät & wrapit",
     items: [
       { name: "Pastrami Burger", desc: "Beef pastrami in craft brioche, dijon aioli, BBQ sauce, raclette melt cheese and pickles.", descFi: "Naudan pastramia briochessa, dijon-aioli, BBQ-kastike, sulaa raclette-juustoa ja suolakurkkua.", diet: "L", fav: true, price: "20,59 €" },
-      { name: "Philly Cheesesteak", desc: "Beef steak, melted provolone cheese, sautéed onion & paprika, cheddar sauce.", descFi: "Naudan pihviä, sulaa provolone-juustoa, paistettua sipulia & paprikaa, cheddarkastike.", diet: "L", price: "9,09 €", price12: "17,14 €" },
-      { name: "Ultimate Italian", desc: "Italian cold cuts, provolone, fresh pesto, roasted vegetables, lettuce, tomatoes & creamy sauce.", descFi: "Italialaisia leikkeleitä, provolonea, tuoretta pestoa, paahdettuja kasviksia, salaattia, tomaattia & kermaista kastiketta.", price: "17,14 €" },
-      { name: "Grilled Halloumi", desc: "Grilled halloumi, provolone, fresh pesto, pickles & sun-dried tomatoes.", descFi: "Grillattua halloumia, provolonea, tuoretta pestoa, suolakurkkua & aurinkokuivattua tomaattia.", diet: "L", price: "9,09 €", price12: "17,14 €" },
-      { name: "Chicken Sandwich", desc: "Pulled chicken on your choice of bread, apple & fennel slaw, salsa verde, truffle & honey mayonnaise, chilli paprika sauce, crispy onion & parmesan.", descFi: "Nyhtökanaa valitsemallasi leivällä, omena-fenkolicoleslaw, salsa verde, tryffeli-hunajamajoneesi, chili-paprikakastike, rapeaa sipulia & parmesaania.", price: "13,69 €" },
-      { name: "Ruben Sandwich", desc: "NY-style pastrami slices & sauerkraut, served with potato crisps & pickles.", descFi: "New York -tyylistä pastramia & hapankaalia, lisukkeena perunalastuja & suolakurkkua.", price: "24,04 €" },
-    ],
-  },
-  {
-    name: "Wraps & Tacos",
-    nameFi: "Wrapit & tacot",
-    items: [
-      { name: "Chicken Shwarma", desc: "Lawash nan, garlic sauce, cheddar sauce, fresh lettuce, cucumber, tomatoes & grilled chicken shawarma.", descFi: "Lawash-leipä, valkosipulikastike, cheddarkastike, tuoretta salaattia, kurkkua, tomaattia & grillattua kana-shawarmaa.", diet: "L", price: "11,39 €" },
-      { name: "Lamb Taco Birria", desc: "3 corn tortillas filled with slow-cooked lamb shoulder, guacamole, mozzarella, salsa & lime.", descFi: "3 maissitortillaa, täytteenä hitaasti haudutettua lampaanlapaa, guacamolea, mozzarellaa, salsaa & limeä.", diet: "L", price: "13,69 €" },
+      { name: "Grilled Halloumi", desc: "Grilled halloumi, provolone, fresh pesto, pickles and sun-dried tomatoes.", descFi: "Grillattua halloumia, provolonea, tuoretta pestoa, suolakurkkua ja aurinkokuivattua tomaattia.", diet: "L", price: "9,09 €", price12: "17,14 €" },
+      { name: "Ultimate Italian", desc: "Italian cold cuts, provolone, fresh pesto, roasted vegetables, lettuce, tomatoes and creamy sauce.", descFi: "Italialaisia leikkeleitä, provolonea, tuoretta pestoa, paahdettuja kasviksia, salaattia, tomaattia ja kermaista kastiketta.", price: "17,14 €" },
+      { name: "Chicken Shwarma", desc: "Lawash nan, garlic sauce, cheddar sauce, fresh lettuce, cucumber, tomatoes and grilled chicken shawarma.", descFi: "Lawash-leipä, valkosipulikastike, cheddarkastike, tuoretta salaattia, kurkkua, tomaattia ja grillattua kana-shawarmaa.", diet: "L", price: "11,39 €" },
+      { name: "Chicken Sandwich", desc: "Pulled chicken, choice of your bread, apple & fennel slaw, salsa verde, truffle and honey mayonnaise, chilli paprika sauce, crispy onion and parmesan.", descFi: "Nyhtökanaa, valitsemasi leipä, omena-fenkolicoleslaw, salsa verde, tryffeli-hunajamajoneesi, chili-paprikakastike, rapeaa sipulia ja parmesaania.", price: "13,69 €" },
+      { name: "Lamb Taco Birria", desc: "3 corn tortillas filled with slowly cooked lamb shoulder, guacamole, mozzarella, salsa and lime.", descFi: "3 maissitortillaa, täytteenä hitaasti haudutettua lampaanlapaa, guacamolea, mozzarellaa, salsaa ja limeä.", diet: "L", price: "13,69 €" },
+      { name: "Philly Cheesesteak", desc: "Beef steak with melted provolone cheese, sautéed onion-paprika and cheddar sauce.", descFi: "Naudan pihviä sulalla provolone-juustolla, paistettua sipulia ja paprikaa sekä cheddarkastiketta.", diet: "L", price: "9,09 €", price12: "17,14 €" },
+      { name: "Ruben Sandwich", desc: "NY style pastrami slice, sauerkraut and comes with potato crisps and pickles.", descFi: "New York -tyylistä pastramia ja hapankaalia, kyljessä perunalastuja ja suolakurkkua.", price: "24,04 €" },
     ],
   },
   {
