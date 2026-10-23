@@ -1,5 +1,6 @@
 import { DEALS } from "@/lib/data";
 import { dict, type Locale } from "@/lib/i18n";
+import WeeklySpecial from "@/components/WeeklySpecial";
 
 export default function Deals({ locale }: { locale: Locale }) {
   const t = dict[locale].deals;
@@ -7,6 +8,7 @@ export default function Deals({ locale }: { locale: Locale }) {
   return (
     <section className="deals" id="deals">
       <div className="wrap">
+        <WeeklySpecial locale={locale} />
         <div className="sec-head reveal">
           <span className="eyebrow">{t.eyebrow}</span>
           <h2>

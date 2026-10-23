@@ -70,6 +70,20 @@ export const SMOOTHIES: Smoothie[] = [
   { name: "Tropical", ing: "Papaya, mango, pineapple, lemon juice, chia seeds, banana, Greek yogurt.", ingFi: "Papaijaa, mangoa, ananasta, sitruunamehua, chia-siemeniä, banaania, kreikkalaista jogurttia.", price: "€6.50", img: "/images/smoothie-tropical.webp" },
 ];
 
+// Weekly special — from the in-store poster of 2026-10-23. Images are cut from that poster.
+export type Special = { name: string; ing: string[]; ingFi: string[]; price: string; with: string; withFi: string; img: string; alt: string; altFi: string };
+export const SPECIAL: Special = {
+  name: "Italian Meatball Sub",
+  ing: ["Vodka sauce", "Melted mozzarella", "Grated Parmesan", "Fresh rucola"],
+  ingFi: ["Vodkakastike", "Sulaa mozzarellaa", "Raastettua parmesaania", "Tuoretta rucolaa"],
+  price: "€11.90",
+  with: "Served with cola",
+  withFi: "Kolan kanssa",
+  img: "/images/special-meatball-sub.webp",
+  alt: "Italian Meatball Sub with a can of Coca-Cola, served with cola for €11.90",
+  altFi: "Italian Meatball Sub ja tölkki Coca-Colaa, kolan kanssa 11,90 €",
+};
+
 export type Deal = { k: string; kFi: string; price: string; d: string; dFi: string; note?: string; noteFi?: string };
 export const DEALS: Deal[] = [
   { k: "Combo deal", kFi: "Combo-tarjous", price: "€8.99", d: "S sub + a soft drink", dFi: "S sub + virvoitusjuoma" },
